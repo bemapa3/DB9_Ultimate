@@ -1,0 +1,14 @@
+{
+  "name": "qwen_image_21",
+  "label": "Qwen-Image 2.1",
+  "match": ["qwenimage21"],
+  "source": "docs.comfy.org/tutorials/image/qwen/qwen-image-2-1 (25 steps, cfg 1, euler, simple, native 2K)",
+  "max_tile": 2048,
+  "steps": 25,
+  "cfg": 1.0,
+  "sampler": "euler",
+  "scheduler": "simple",
+  "reference_mode": "strip",
+  "control_backend": "qwen21_fun",
+  "control_mode": "canny"
+}

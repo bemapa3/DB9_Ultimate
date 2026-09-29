@@ -1,0 +1,14 @@
+{
+  "name": "flux2_klein_base",
+  "label": "FLUX.2 Klein base 4B/9B",
+  "match": [],
+  "source": "Comfy-Org/workflow_templates image_flux2_klein_image_edit_9b_base.json (Flux2Scheduler 20 steps, CFG 5, euler)",
+  "max_tile": 1536,
+  "steps": 20,
+  "cfg": 5.0,
+  "sampler": "euler",
+  "scheduler": "flux2",
+  "reference_mode": "strip",
+  "control_backend": "native",
+  "control_mode": "tile"
+}

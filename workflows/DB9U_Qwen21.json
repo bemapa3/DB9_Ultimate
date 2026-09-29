@@ -1,0 +1,775 @@
+{
+ "last_node_id": 20,
+ "last_link_id": 15,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "LoadImage",
+   "pos": [
+    0,
+    0
+   ],
+   "size": [
+    340,
+    420
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      2,
+      9
+     ]
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "example.png",
+    "image"
+   ],
+   "title": "Ảnh gốc"
+  },
+  {
+   "id": 5,
+   "type": "UpscaleModelLoader",
+   "pos": [
+    0,
+    880
+   ],
+   "size": [
+    340,
+    60
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 4,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "UPSCALE_MODEL",
+     "type": "UPSCALE_MODEL",
+     "links": [
+      7
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UpscaleModelLoader"
+   },
+   "widgets_values": [
+    "4x_foolhardy_Remacri.pth"
+   ],
+   "title": "(Tuỳ chọn) Upscale model — đang BYPASS"
+  },
+  {
+   "id": 2,
+   "type": "UNETLoader",
+   "pos": [
+    0,
+    470
+   ],
+   "size": [
+    340,
+    90
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      3
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader"
+   },
+   "widgets_values": [
+    "qwen_image_2.1_int8_convrot.safetensors",
+    "default"
+   ]
+  },
+  {
+   "id": 3,
+   "type": "CLIPLoader",
+   "pos": [
+    0,
+    600
+   ],
+   "size": [
+    340,
+    110
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CLIP",
+     "type": "CLIP",
+     "links": [
+      1
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPLoader"
+   },
+   "widgets_values": [
+    "qwen3vl_8b_int8_convrot.safetensors",
+    "qwen_image",
+    "default"
+   ]
+  },
+  {
+   "id": 4,
+   "type": "VAELoader",
+   "pos": [
+    0,
+    750
+   ],
+   "size": [
+    340,
+    60
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      4
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader"
+   },
+   "widgets_values": [
+    "qwen_image_2.1_vae_bf16.safetensors"
+   ]
+  },
+  {
+   "id": 6,
+   "type": "TextEncodeQwenImage21",
+   "pos": [
+    380,
+    470
+   ],
+   "size": [
+    420,
+    330
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 1
+    },
+    {
+     "name": "images.image_1",
+     "type": "IMAGE",
+     "link": null,
+     "shape": 7
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": null,
+     "shape": 7
+    }
+   ],
+   "outputs": [
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "links": [
+      5
+     ]
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "links": [
+      6
+     ]
+    },
+    {
+     "name": "latent",
+     "type": "LATENT",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TextEncodeQwenImage21"
+   },
+   "widgets_values": [
+    "photorealistic architectural photography, sharp fine details, detailed natural foliage, realistic materials, natural lighting",
+    "blurry, noise, artifacts, distorted lines, plastic texture",
+    1024
+   ],
+   "title": "Prompt (mô tả chất lượng/vật liệu)"
+  },
+  {
+   "id": 13,
+   "type": "QwenImage21FunControlNetLoader",
+   "pos": [
+    380,
+    0
+   ],
+   "size": [
+    420,
+    80
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 4,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "control_net",
+     "type": "QWEN21_FUN_CONTROLNET",
+     "links": [
+      8
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "QwenImage21FunControlNetLoader"
+   },
+   "widgets_values": [
+    "Qwen-Image-2.1-Fun-Controlnet-Union.safetensors"
+   ],
+   "title": "(Tuỳ chọn) Qwen 2.1 Fun ControlNet — BYPASS"
+  },
+  {
+   "id": 10,
+   "type": "DB9U_Upscale",
+   "pos": [
+    840,
+    0
+   ],
+   "size": [
+    400,
+    420
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 2
+    },
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 3
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 4
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 5
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 6
+    },
+    {
+     "name": "upscale_model",
+     "type": "UPSCALE_MODEL",
+     "link": 7,
+     "shape": 7
+    },
+    {
+     "name": "control_net",
+     "type": "CONTROL_NET",
+     "link": null,
+     "shape": 7
+    },
+    {
+     "name": "qwen21_controlnet",
+     "type": "QWEN21_FUN_CONTROLNET",
+     "link": 8,
+     "shape": 7
+    },
+    {
+     "name": "control_image",
+     "type": "IMAGE",
+     "link": null,
+     "shape": 7
+    },
+    {
+     "name": "settings",
+     "type": "DB9U_SETTINGS",
+     "link": null,
+     "shape": 7
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": [
+      10
+     ]
+    },
+    {
+     "name": "original_resized",
+     "type": "IMAGE",
+     "links": []
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": [
+      15
+     ]
+    },
+    {
+     "name": "texture_mask",
+     "type": "IMAGE",
+     "links": [
+      13
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "DB9U_Upscale"
+   },
+   "widgets_values": [
+    "8K",
+    0.4,
+    0.0,
+    "balanced",
+    0,
+    "fixed"
+   ],
+   "title": "DB9U Upscale",
+   "color": "#232",
+   "bgcolor": "#353"
+  },
+  {
+   "id": 11,
+   "type": "DB9U_QAQC",
+   "pos": [
+    1280,
+    0
+   ],
+   "size": [
+    380,
+    330
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "original",
+     "type": "IMAGE",
+     "link": 9
+    },
+    {
+     "name": "result",
+     "type": "IMAGE",
+     "link": 10
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image_safe",
+     "type": "IMAGE",
+     "links": [
+      11
+     ]
+    },
+    {
+     "name": "deltaE_heatmap",
+     "type": "IMAGE",
+     "links": [
+      12
+     ]
+    },
+    {
+     "name": "report",
+     "type": "STRING",
+     "links": [
+      14
+     ]
+    },
+    {
+     "name": "pass",
+     "type": "BOOLEAN",
+     "links": []
+    },
+    {
+     "name": "deltaE_mean",
+     "type": "FLOAT",
+     "links": []
+    },
+    {
+     "name": "ssim",
+     "type": "FLOAT",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "DB9U_QAQC"
+   },
+   "widgets_values": [
+    2.0,
+    0.5,
+    1.0,
+    0.85,
+    0.8,
+    1.0,
+    true
+   ],
+   "title": "DB9U QAQC",
+   "color": "#223",
+   "bgcolor": "#335"
+  },
+  {
+   "id": 12,
+   "type": "SaveImage",
+   "pos": [
+    1700,
+    0
+   ],
+   "size": [
+    420,
+    460
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 11
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "DB9U/img"
+   ],
+   "title": "Lưu (image_safe)"
+  },
+  {
+   "id": 14,
+   "type": "PreviewImage",
+   "pos": [
+    1700,
+    500
+   ],
+   "size": [
+    420,
+    300
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 12
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": [],
+   "title": "Heatmap lệch màu"
+  },
+  {
+   "id": 15,
+   "type": "PreviewImage",
+   "pos": [
+    1700,
+    840
+   ],
+   "size": [
+    420,
+    300
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 13
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": [],
+   "title": "Texture mask (trắng = denoise cao)"
+  },
+  {
+   "id": 16,
+   "type": "PreviewAny",
+   "pos": [
+    1280,
+    380
+   ],
+   "size": [
+    380,
+    260
+   ],
+   "flags": {},
+   "order": 16,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "source",
+     "type": "*",
+     "link": 14
+    }
+   ],
+   "outputs": [
+    {
+     "name": "STRING",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "title": "Report QAQC"
+  },
+  {
+   "id": 17,
+   "type": "PreviewAny",
+   "pos": [
+    1280,
+    680
+   ],
+   "size": [
+    380,
+    260
+   ],
+   "flags": {},
+   "order": 17,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "source",
+     "type": "*",
+     "link": 15
+    }
+   ],
+   "outputs": [
+    {
+     "name": "STRING",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "title": "Log"
+  },
+  {
+   "id": 20,
+   "type": "MarkdownNote",
+   "pos": [
+    840,
+    470
+   ],
+   "size": [
+    400,
+    520
+   ],
+   "flags": {},
+   "order": 20,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "properties": {},
+   "widgets_values": [
+    "# DB9 Ultimate — Qwen-Image 2.1\n\n**Chỉ cần chỉnh:** `target` (x2/x3/x4/6K/8K/10K/11K) · `denoise` · `cfg` (0 = tự theo model) · `preset`.\nMọi thứ khác tự động: profile model, cỡ ô theo VRAM, số lượt (≤2x/lượt), lô ô trên GPU lớn, denoise vùng lá (+0.2), khoá màu, khoá viền kiến trúc, chạy lại ô lệch, giảm cỡ ô khi hết VRAM.\n\n| Triệu chứng | Chỉnh |\n|---|---|\n| Chưa đủ chi tiết | denoise ↑ (0.45–0.55) |\n| Lệch form/viền | denoise ↓ (0.3–0.35) hoặc bật ControlNet |\n| Lá nhoè | DB9U Advanced Settings → texture_denoise 0.7 |\n| Chậm | preset fast |\n\nTinh chỉnh sâu: thêm node **DB9U Advanced Settings** → nối vào `settings`.\nLog (console + node Log) ghi rõ profile, GPU, số ô, thời gian còn lại.\nControlNet: bật node Qwen 2.1 Fun (cần custom node b2renger + file 7GB trong models/controlnet)."
+   ],
+   "title": "Note",
+   "color": "#432",
+   "bgcolor": "#653"
+  }
+ ],
+ "links": [
+  [
+   1,
+   3,
+   0,
+   6,
+   0,
+   "CLIP"
+  ],
+  [
+   2,
+   1,
+   0,
+   10,
+   0,
+   "IMAGE"
+  ],
+  [
+   3,
+   2,
+   0,
+   10,
+   1,
+   "MODEL"
+  ],
+  [
+   4,
+   4,
+   0,
+   10,
+   2,
+   "VAE"
+  ],
+  [
+   5,
+   6,
+   0,
+   10,
+   3,
+   "CONDITIONING"
+  ],
+  [
+   6,
+   6,
+   1,
+   10,
+   4,
+   "CONDITIONING"
+  ],
+  [
+   7,
+   5,
+   0,
+   10,
+   5,
+   "UPSCALE_MODEL"
+  ],
+  [
+   8,
+   13,
+   0,
+   10,
+   7,
+   "QWEN21_FUN_CONTROLNET"
+  ],
+  [
+   9,
+   1,
+   0,
+   11,
+   0,
+   "IMAGE"
+  ],
+  [
+   10,
+   10,
+   0,
+   11,
+   1,
+   "IMAGE"
+  ],
+  [
+   11,
+   11,
+   0,
+   12,
+   0,
+   "IMAGE"
+  ],
+  [
+   12,
+   11,
+   1,
+   14,
+   0,
+   "IMAGE"
+  ],
+  [
+   13,
+   10,
+   3,
+   15,
+   0,
+   "IMAGE"
+  ],
+  [
+   14,
+   11,
+   2,
+   16,
+   0,
+   "STRING"
+  ],
+  [
+   15,
+   10,
+   2,
+   17,
+   0,
+   "STRING"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.7,
+   "offset": [
+    300,
+    100
+   ]
+  }
+ },
+ "version": 0.4
+}

@@ -1,0 +1,17 @@
+{
+  "name": "flux2_klein_distilled",
+  "label": "FLUX.2 Klein (distilled 4B/9B)",
+  "match": [
+    "flux2"
+  ],
+  "source": "Comfy-Org/workflow_templates image_flux2_klein_image_edit_9b_distilled.json (Flux2Scheduler 4 steps, CFG 1, euler); tile 1536 theo workflow thực tế của chủ",
+  "max_tile": 1536,
+  "steps": 4,
+  "cfg": 1.0,
+  "sampler": "euler",
+  "scheduler": "flux2",
+  "reference_mode": "strip",
+  "control_backend": "native",
+  "control_mode": "tile",
+  "warning": "FLUX.2 dev / Klein base / Klein distilled dùng chung 1 class model nên không tự phân biệt được. Đang dùng Klein distilled (4 steps, cfg 1). Nếu dùng Klein base hoặc FLUX.2 dev: chọn profile trong DB9U Advanced Settings."
+}
