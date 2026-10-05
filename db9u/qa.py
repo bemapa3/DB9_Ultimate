@@ -40,7 +40,8 @@ class DB9U_QAQC:
             "min_ssim": ("FLOAT", {"default": 0.85, "min": 0.0, "max": 1.0, "step": 0.01}),
             "min_edge_f1": ("FLOAT", {"default": 0.80, "min": 0.0, "max": 1.0, "step": 0.01}),
             "compare_blur": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.5}),
-            "auto_fix": ("BOOLEAN", {"default": True}),
+            "auto_fix": ("BOOLEAN", {"default": False,
+                         "tooltip": "Khi FAIL: khoá màu+viền mạnh theo gốc. Làm mềm chi tiết -> chỉ bật khi cần an toàn tuyệt đối"}),
         }}
 
     RETURN_TYPES = ("IMAGE", "IMAGE", "STRING", "BOOLEAN", "FLOAT", "FLOAT")
@@ -57,6 +58,16 @@ class DB9U_QAQC:
         for i in range(result.shape[0]):
             o = original[min(i, original.shape[0] - 1):][:1, ..., :3].float().cpu()
             r = result[i:i + 1, ..., :3].float().cpu()
+            ar_o, ar_r = o.shape[2] / o.shape[1], r.shape[2] / r.shape[1]
+            if abs(ar_o / ar_r - 1) > 0.02:
+                rep = (f"===== DB9 QAQC ảnh {i}: BỎ QUA =====\n'original' {o.shape[2]}x{o.shape[1]} khác tỉ lệ 'result' "
+                       f"{r.shape[2]}x{r.shape[1]} (preview_tile?). Nối original <- original_resized của DB9U Upscale.")
+                safes.append(r)
+                heats.append(torch.zeros_like(r))
+                reports.append(rep)
+                des.append(0.0)
+                ssims.append(1.0)
+                continue
             m = core.qa_compare(o, r, compare_blur, max_deltaE)
             ok = evaluate(m, thr)
             rep = fmt_report(m, thr, ok, f"QAQC ảnh {i}")

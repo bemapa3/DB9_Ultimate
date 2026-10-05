@@ -1,0 +1,14 @@
+{
+  "name": "flux2_klein_detail",
+  "label": "FLUX.2 Klein 9B distilled — Detail (edit-ref)",
+  "match": [],
+  "source": "Như flux2_klein_distilled (4 steps, cfg 1, euler, Flux2Scheduler) + reference_mode tile: ô gốc đưa vào reference_latents -> Klein 'sửa' ô thay vì img2img thuần, giữ form/vật liệu ở denoise cao hơn. Rút từ phân tích workflow cũ BBB-UpscaleF2K9B (2026-10-01).",
+  "max_tile": 1536,
+  "steps": 4,
+  "cfg": 1.0,
+  "sampler": "euler",
+  "scheduler": "flux2",
+  "reference_mode": "tile",
+  "control_backend": "native",
+  "control_mode": "tile"
+}

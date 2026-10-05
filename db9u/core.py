@@ -131,6 +131,164 @@ def color_lock(result, reference, mode="detail_transfer", strength=1.0, sigma=6.
     return (result + (out - result) * strength).clamp(0, 1)
 
 
+def color_lock_zoned(result, reference, mode, strength, sigma, tex=None, texture_mult=4.0):
+    """color_lock nhưng vùng lá/texture dày chỉ khoá mảng LỚN (sigma x texture_mult).
+    Lý do: ở vùng lá model vẽ lại lá ở vị trí mới; khoá tần số thấp theo gốc ở sigma nhỏ sẽ đè các đốm sáng
+    của lá cũ lên -> bóng ma, quầng mờ ('nhoè, nhìn giả'). tex: [B,H,W,1] 0..1 (None = như color_lock)."""
+    fine = color_lock(result, reference, mode, strength, sigma)
+    if tex is None or mode not in ("detail_transfer", "both") or texture_mult <= 1 or strength <= 0:
+        return fine
+    coarse = color_lock(result, reference, mode, strength, sigma * texture_mult)
+    t = tex[..., :1].to(fine.dtype)
+    return (fine * (1 - t) + coarse * t).clamp(0, 1)
+
+
+def chroma_lock(result, reference, strength=1.0, rows=512):
+    """Giữ ĐỘ SÁNG (chi tiết, nếp, vân) của result, lấy MÀU (a,b trong Lab) từ reference, theo strength.
+    Chặn AI bơm nhiễu màu ở chi tiết (cành tím, lá hồng, vân đá xanh/đỏ) — v0.11.2: đo img_00007 chroma dải
+    2–8px gấp 3.5x gốc trong khi độ sáng chỉ 1.4x. result, reference [B,H,W,3] cùng cỡ. Chạy theo dải hàng cho đỡ RAM."""
+    if strength <= 0:
+        return result
+    out = torch.empty_like(result[..., :3])
+    for y in range(0, result.shape[1], rows):
+        r = srgb_to_lab(result[:, y:y + rows, :, :3].float())
+        f = srgb_to_lab(reference[:, y:y + rows, :, :3].float().to(r.device))
+        r[..., 1:] = r[..., 1:] + (f[..., 1:] - r[..., 1:]) * float(strength)
+        out[:, y:y + rows] = lab_to_srgb(r).to(out.dtype)
+    return out
+
+
+def detail_graft(soft, sharp, sigma):
+    """Giữ mảng/khối của `soft`, thay chi tiết mịn (< sigma px) bằng của `sharp`. [B,H,W,3] cùng kích thước."""
+    a, b = to_bchw(soft), to_bchw(sharp)
+    out = gaussian_blur(a, sigma) + (b - gaussian_blur(b, sigma))
+    return to_bhwc(out.clamp(0, 1))
+
+
+def band_fusion(ai, low_ref, sr, tex=None, mode="detail_transfer", strength=1.0, sigma_low=8.0, sigma_hi=2.0,
+                ai_detail=0.6, gate=True, texture_mult=4.0, return_gate=False, texture_ai=0.0):
+    """Tách 3 dải tần (như frequency separation khi retouch):
+      - mảng lớn (> sigma_low): ẢNH GỐC (low_ref)  -> giữ màu, khối, form
+      - vân vừa (sigma_hi..sigma_low): SR model của ẢNH GỐC (sr) -> vân vật liệu thật, không phải vân AI
+      - chi tiết mịn (< sigma_hi): trộn SR và AI theo ai_detail x cổng tương quan
+    Cổng (gate): chỗ AI tạo vân KHÔNG khớp vân của SR (đốm/hạt AI trên tường phẳng) -> tự bỏ phần AI.
+    texture_ai > 0: vùng lá/texture (tex) pha thêm AI trọn (chỉ khoá mảng lớn sigma_low x texture_mult).
+    Mặc định 0 — đo trên ảnh thật: cho AI trọn ở vùng lá/đá gây quầng mờ và vân bị quệt.
+    Tất cả [B,H,W,3] cùng kích thước; tex [B,H,W,1] hoặc None."""
+    if mode in ("lab_stats", "both"):
+        ai = color_lock(ai, low_ref, "lab_stats", strength)
+    a, r = to_bchw(ai[..., :3].float()), to_bchw(sr[..., :3].float())
+    low = gaussian_blur(to_bchw(low_ref[..., :3].float()), sigma_low) if mode != "none" else gaussian_blur(a, sigma_low)
+    r_hb = gaussian_blur(r, sigma_hi)
+    out = low + (r_hb - gaussian_blur(r, sigma_low))          # mảng lớn gốc + vân vừa SR
+    hi_sr = r - r_hb
+    del r_hb
+    hi_ai = a - gaussian_blur(a, sigma_hi)
+    w = torch.full_like(out[:, :1], float(ai_detail))
+    if gate:
+        la = hi_ai.mean(1, keepdim=True)
+        ls = hi_sr.mean(1, keepdim=True)
+        gs = max(2.0, sigma_hi * 2)
+        num = gaussian_blur(la * ls, gs)
+        den = torch.sqrt(gaussian_blur(la * la, gs) * gaussian_blur(ls * ls, gs)) + 1e-6
+        corr = num / den
+        g = ((corr - 0.05) / 0.45).clamp(0, 1)   # corr ≤0.05: AI bịa -> bỏ · ≥0.5: khớp gốc -> nhận
+        w = w * g
+        del la, ls, num, den, corr
+    out = out + hi_sr + w * (hi_ai - hi_sr)
+    del hi_sr, hi_ai
+    fused = to_bhwc(out.clamp(0, 1))
+    if mode != "none" and strength < 1:
+        fused = ai + (fused - ai) * strength
+    if tex is not None and texture_ai > 0:
+        t = tex[..., :1].to(fused.dtype) * float(texture_ai)
+        leaf = color_lock(ai, low_ref, "detail_transfer" if mode != "none" else "none", strength, sigma_low * texture_mult)
+        fused = fused * (1 - t) + leaf * t
+    fused = fused.clamp(0, 1)
+    if return_gate:
+        return fused, to_bhwc(w)
+    return fused
+
+
+def _band_corr(a, b, win):
+    """Tương quan cục bộ (độ sáng) giữa 2 dải tần BCHW -> [B,1,H,W]."""
+    la, lb = a.mean(1, keepdim=True), b.mean(1, keepdim=True)
+    num = gaussian_blur(la * lb, win)
+    den = torch.sqrt(gaussian_blur(la * la, win) * gaussian_blur(lb * lb, win)) + 1e-6
+    return num / den
+
+
+def enhance_fusion(ai, base, sr, tex=None, mode="detail_transfer", strength=1.0, sigma_low=8.0, sigma_mid=2.0,
+                   texture_mult=4.0, structure_lock=0.5, return_gate=False):
+    """ENHANCE: màu/mảng lớn theo ảnh vào (> sigma_low; vùng lá > sigma_low x texture_mult), còn lại lấy từ AI —
+    NHƯNG chỗ AI vẽ lại hình thì dải đó thay bằng SR (vân vừa, mịn) / ảnh vào (dải thô vùng lá)
+    -> đẩy chi tiết mà không biến dạng lá, cỏ, vân đá. structure_lock 0 = nhận hết AI (v0.9.0).
+    Thử trên TU2119 (img_00012): cỏ/dương xỉ về đúng dáng gốc, tường/trần/sàn giữ gần hết chi tiết AI."""
+    e = color_lock_zoned(ai, base, mode, strength, sigma_low, tex, texture_mult)
+    if structure_lock <= 0:
+        return (e, None) if return_gate else e
+    sl = float(structure_lock)
+    a, r, b = to_bchw(ai[..., :3].float()), to_bchw(sr[..., :3].float()), to_bchw(base[..., :3].float())
+    am, rm = gaussian_blur(a, sigma_mid), gaussian_blur(r, sigma_mid)
+    aL, rL = gaussian_blur(a, sigma_low), gaussian_blur(r, sigma_low)
+    d_mid_a, d_mid_r = am - aL, rm - rL
+    g_mid = ((_band_corr(d_mid_a, d_mid_r, max(4.0, sigma_low)) - (0.35 + 0.4 * sl)) / 0.25).clamp(0, 1)
+    fix = (1 - g_mid) * (d_mid_a - d_mid_r)
+    del d_mid_a, d_mid_r
+    d_fin_a, d_fin_r = a - am, r - rm
+    g_fin = ((_band_corr(d_fin_a, d_fin_r, max(3.0, sigma_mid * 3)) - (0.20 + 0.4 * sl)) / 0.25).clamp(0, 1)
+    g_fin = g_fin * (0.5 + 0.5 * g_mid)
+    fix = fix + (1 - g_fin) * (d_fin_a - d_fin_r)
+    del d_fin_a, d_fin_r, am, rm, rL
+    g_c = None
+    if tex is not None and texture_mult > 1 and mode in ("detail_transfer", "both"):
+        # vùng lá: khoá màu chỉ ở mảng rất lớn -> AI được giữ dải sigma_low..sigma_low*mult (dáng lá) -> kiểm luôn dải này
+        sC = sigma_low * texture_mult
+        bL = gaussian_blur(b, sigma_low)
+        d_c_a, d_c_b = aL - gaussian_blur(a, sC), bL - gaussian_blur(b, sC)
+        g_c = ((_band_corr(d_c_a, d_c_b, sC) - (0.45 + 0.4 * sl)) / 0.25).clamp(0, 1)
+        t = tex[..., :1].movedim(-1, 1).to(g_c.dtype)
+        fix = fix + t * (1 - g_c) * (d_c_a - d_c_b)
+        del d_c_a, d_c_b, bL
+    del a, r, b, aL
+    out = to_bhwc((to_bchw(e) - fix).clamp(0, 1))
+    if return_gate:
+        return out, (to_bhwc(g_mid), to_bhwc(g_fin))
+    return out
+
+
+def flow_align(ai, ref, max_px=16.0, smooth=3.0):
+    """Căn ảnh AI về đúng vị trí ảnh tham chiếu theo từng pixel (optical flow DIS của OpenCV).
+    AI hay xê dịch lá/vân vài px; trộn 2 lớp lệch nhau = bóng mờ. Trả (ai_đã_căn, p95_px) hoặc (ai, None) nếu thiếu OpenCV."""
+    try:
+        import cv2
+        import numpy as np
+    except Exception:
+        return ai, None
+    a = ai[0, ..., :3].float().clamp(0, 1).cpu().numpy()
+    r = ref[0, ..., :3].float().clamp(0, 1).cpu().numpy()
+    H, W = a.shape[:2]
+    k = 1 if max(H, W) <= 6400 else 2  # ảnh rất lớn: tính flow ở 1/2 rồi phóng lên
+    def gray(x):
+        g = (x[..., 0] * 0.299 + x[..., 1] * 0.587 + x[..., 2] * 0.114) * 255
+        g = g.astype(np.uint8)
+        return cv2.resize(g, (W // k, H // k), interpolation=cv2.INTER_AREA) if k > 1 else g
+    dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+    fl = dis.calc(gray(r), gray(a), None)
+    if k > 1:
+        fl = cv2.resize(fl, (W, H), interpolation=cv2.INTER_LINEAR) * k
+    fl = np.clip(fl, -max_px, max_px)
+    fl = cv2.GaussianBlur(fl, (0, 0), smooth)
+    mag = np.sqrt((fl ** 2).sum(-1))
+    p95 = float(np.percentile(mag[:: max(1, H // 512), :: max(1, W // 512)], 95))
+    gx, gy = np.meshgrid(np.arange(W, dtype=np.float32), np.arange(H, dtype=np.float32))
+    out = cv2.remap(a, gx + fl[..., 0], gy + fl[..., 1], cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+    out = torch.from_numpy(np.clip(out, 0, 1)).unsqueeze(0).to(ai.dtype)
+    if ai.shape[0] > 1:
+        out = torch.cat([out, ai[1:]], 0)
+    return out, p95
+
+
 # ----------------------------------------------------------------------------
 # Chia ô / ghép ô
 # ----------------------------------------------------------------------------
@@ -519,3 +677,85 @@ def control_map(tile, mode):
     except ImportError:
         m = edge_map(luminance(x)).float().movedim(1, -1)
     return m.repeat(1, 1, 1, 3)
+
+
+def sky_mask(reference, work_short_side=512, max_busy=0.12, min_lum=0.35):
+    """Mask TRỜI [B,1,H,W]: vùng phẳng (ít gradient), sáng, nối liền với mép trên ảnh.
+    Heuristic đơn giản — không nhận kính/nước. Trời phẳng nên gần như không denoise (tránh sinh nhiễu/mây giả)."""
+    lum = luminance(reference[..., :3].float())
+    H, W = lum.shape[-2:]
+    f = max(1.0, min(H, W) / work_short_side)
+    small = F.interpolate(lum, size=(max(8, round(H / f)), max(8, round(W / f))), mode="area") if f > 1 else lum
+    s = _blur_bchw_direct(small, 1.0)
+    kx = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=s.dtype, device=s.device).view(1, 1, 3, 3) / 8
+    p = F.pad(s, (1, 1, 1, 1), mode="replicate")
+    mag = torch.sqrt(F.conv2d(p, kx) ** 2 + F.conv2d(p, kx.transpose(-1, -2)) ** 2)
+    busy = _blur_bchw_direct((mag > 0.01).float(), 3.0)
+    cand = ((busy < max_busy) & (small > min_lum)).float()
+    m = torch.zeros_like(cand)
+    m[..., 0, :] = cand[..., 0, :]
+    for it in range(small.shape[-2] * 2):  # lan từ mép trên xuống, chỉ trong vùng ứng viên
+        nm = F.max_pool2d(m, 3, 1, 1) * cand
+        if it % 8 == 0 and torch.equal(nm, m):
+            break
+        m = nm
+    m = _blur_bchw_direct(m, 2.0).clamp(0, 1)
+    if f > 1:
+        m = F.interpolate(m, size=(H, W), mode="bilinear", align_corners=False).clamp(0, 1)
+    return m
+
+
+# ----------------------------------------------------------------------------
+# Khử đốm / nhiễu render ở mảng phẳng (tường vữa, trần, sơn) — chạy trên ẢNH GỐC trước khi phóng
+# ----------------------------------------------------------------------------
+def _box(t, r):
+    return F.avg_pool2d(F.pad(t, (r, r, r, r), mode="reflect"), 2 * r + 1, 1)
+
+
+def _median3(t, rows=512):
+    """Median 3x3 BCHW (C=1), chia khúc theo hàng cho đỡ RAM."""
+    H = t.shape[-2]
+    p = F.pad(t, (1, 1, 1, 1), mode="reflect")
+    out = torch.empty_like(t)
+    for y in range(0, H, rows):
+        y1 = min(H, y + rows)
+        u = F.unfold(p[..., y:y1 + 2, :], 3)  # [B,9,L]
+        out[..., y:y1, :] = u.median(1).values.view(t.shape[0], 1, y1 - y, t.shape[-1])
+    return out
+
+
+def despeckle(img, strength=0.5, radius=2):
+    """img [B,H,W,3] -> (ảnh sạch, tỉ lệ pixel đốm).
+    1) Đốm đơn lẻ (1-3px sáng/tối hơn hẳn xung quanh) -> thay bằng median 3x3.
+    2) Hạt nhiễu mịn -> guided filter (giữ cạnh) với eps theo strength.
+    Chỉ áp ở mảng phẳng: vùng lá/cỏ/texture dày và cạnh kiến trúc được loại ra -> không nhoè lá, không mềm viền.
+    Đánh đổi: strength cao làm mất một phần vân vữa/sơn thật."""
+    if strength <= 0:
+        return img, 0.0
+    s = float(min(1.0, strength))
+    x = to_bchw(img[..., :3].float())
+    lum = luminance(img[..., :3].float())
+    med = _median3(lum)
+    res = lum - med
+    mad = _box(res.abs(), 3)
+    thr = 0.035 - 0.02 * s  # strength cao -> bắt cả đốm mờ hơn
+    dots = ((res.abs() > torch.clamp(3.0 * mad, min=thr)) & (res.abs() > thr)).float()
+    dots = F.max_pool2d(dots, 3, 1, 1)  # phủ cả viền đốm
+    # median từng kênh chỉ cần ở chỗ có đốm -> dùng dịch chuyển độ sáng (giữ màu)
+    fixed = (x - res * dots).clamp(0, 1)
+    # guided filter tự dẫn (mỗi kênh)
+    eps = (0.012 + 0.03 * s) ** 2
+    m = _box(fixed, radius)
+    v = _box(fixed * fixed, radius) - m * m
+    a = v / (v + eps)
+    b = m - a * m
+    smooth = (_box(a, radius) * fixed + _box(b, radius)).clamp(0, 1)
+    # vùng áp: bỏ texture dày + cạnh kiến trúc
+    keep = texture_mask(img).clamp(0, 1)
+    keep = torch.maximum(keep, structure_edge_mask(img, 2))
+    w = (1 - keep) * min(1.0, 0.4 + 0.8 * s)
+    # vùng phẳng: đốm luôn bị thay (fixed), hạt mịn làm mượt theo w
+    flat = fixed * (1 - keep) + x * keep
+    out = flat * (1 - w) + smooth * w
+    frac = float((dots * (1 - keep)).mean())
+    return to_bhwc(out.clamp(0, 1)), frac

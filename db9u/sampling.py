@@ -63,12 +63,15 @@ def flux2_sigmas(steps, width, height, denoise):
 
 
 def ksample(model, latent, seed, steps, cfg, sampler_name, scheduler, positive, negative, denoise,
-            noise_mask=None, pixel_size=None):
-    """Như common_ksampler nhưng hỗ trợ scheduler 'flux2' (custom sigmas) và noise_mask."""
+            noise_mask=None, pixel_size=None, sigmas=None):
+    """Như common_ksampler nhưng hỗ trợ scheduler 'flux2' (custom sigmas), noise_mask và sigmas truyền thẳng
+    (sigmas != None -> bỏ qua scheduler/denoise, chạy đúng dãy sigmas đó)."""
     lat = comfy.sample.fix_empty_latent_channels(model, latent)
     noise = comfy.sample.prepare_noise(lat, seed, None)
-    sigmas, sched = None, scheduler
-    if scheduler == "flux2":
+    sched = scheduler
+    if sigmas is not None:
+        steps, sched, denoise = len(sigmas) - 1, "simple", 1.0
+    elif scheduler == "flux2":
         w, h = pixel_size
         sigmas = flux2_sigmas(steps, w, h, denoise)
         sched = "simple"

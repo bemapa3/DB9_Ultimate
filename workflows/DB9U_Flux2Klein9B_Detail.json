@@ -69,9 +69,9 @@
     "Node name for S&R": "UpscaleModelLoader"
    },
    "widgets_values": [
-    "4x_foolhardy_Remacri.pth"
+    "4x-UltraSharp.ckpt"
    ],
-   "title": "(Tuỳ chọn) Upscale model — đang BYPASS"
+   "title": "Upscale model (BẬT — cần cho enhance/structure_lock)"
   },
   {
    "id": 2,
@@ -183,7 +183,7 @@
    ],
    "flags": {},
    "order": 7,
-   "mode": 4,
+   "mode": 0,
    "inputs": [
     {
      "name": "model",
@@ -217,11 +217,11 @@
     "Node name for S&R": "LoraLoader"
    },
    "widgets_values": [
-    "your_lora.safetensors",
+    "Lora/DB9_Upscale_Ver004.safetensors",
     0.8,
-    0.8
+    0.0
    ],
-   "title": "(Tuỳ chọn) LoRA — đang BYPASS"
+   "title": "LoRA upscale (đang BẬT) — chọn lại file nếu báo đỏ"
   },
   {
    "id": 6,
@@ -259,7 +259,7 @@
     "Node name for S&R": "CLIPTextEncode"
    },
    "widgets_values": [
-    "increase image details, photorealistic architectural photography, sharp fine details, realistic materials, keep original color"
+    "increase image details,upscale_mir,BBB_Upscale_Ver004,keep original color, no color driff, photorealistic architectural photography, realistic materials"
    ],
    "title": "Prompt (+ trigger LoRA nếu có)"
   },
@@ -439,8 +439,8 @@
     "Node name for S&R": "DB9U_Upscale"
    },
    "widgets_values": [
-    "8K",
-    0.4,
+    "6K",
+    0.45,
     0.0,
     "balanced",
     0,
@@ -787,7 +787,7 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "# DB9 Ultimate — FLUX.2 Klein 9B\n\n**Chỉ cần chỉnh:** `target` (x2/x3/x4/6K/8K/10K/11K) · `denoise` · `cfg` (0 = tự theo model) · `preset`.\nMọi thứ khác tự động: profile model, cỡ ô theo VRAM, số lượt (≤2x/lượt), lô ô trên GPU lớn, denoise vùng lá (+0.2), khoá màu, khoá viền kiến trúc, chạy lại ô lệch, giảm cỡ ô khi hết VRAM.\n\n| Triệu chứng | Chỉnh |\n|---|---|\n| Chưa đủ chi tiết | denoise ↑ (0.45–0.55) |\n| Lệch form/viền | denoise ↓ (0.3–0.35) hoặc bật ControlNet |\n| Lá nhoè | DB9U Advanced Settings → texture_denoise 0.7 |\n| Chậm | preset fast |\n\nTinh chỉnh sâu: thêm node **DB9U Advanced Settings** → nối vào `settings`.\nLog (console + node Log) ghi rõ profile, GPU, số ô, thời gian còn lại.\n**DB9U Finish (1 node):** chỉnh màu (Basic/Presence/Curves/HSL/Color Balance/Selective/LUT) + so sánh trước/sau (rê chuột trên ảnh trong node) + lưu.\n- save_file tắt + live_edit bật: kéo thanh là tự chạy lại trên preview (chỉ node này chạy; seed node Upscale để fixed).\n- Ưng rồi: bật save_file → Run → lưu full-res (local_folder hoặc output ComfyUI; cloud tự lưu output).\nProfile tự nhận = Klein distilled (4 steps, cfg 1). Klein base/FLUX.2 dev: chọn profile trong Advanced Settings.\nLoRA: bật node LoRA (Ctrl+B). ControlNet: chỉ dùng loại tương thích FLUX.2 — loại không tương thích sẽ tự tắt.\n\n**Advanced Settings (đã nối sẵn):**\n- Bảng ô: `preview_tile` = true, `preview_tiles` trống → Run → bấm **🔲 Chọn ô trên bảng** → Áp dụng & chạy.\n- `preview_layout` frame: ô preview đặt đúng chỗ trên cả khung → so với gốc trong Finish. `preview_denoise` \"0.3,0.4,0.5\" để so mức denoise.\n- `reuse_preview`: tắt preview_tile chạy full sẽ dùng lại ô đã preview (ảnh 1 lượt, giữ nguyên thông số).\n- `despeckle` 0.3–0.5 nếu tường vữa lấm tấm đốm render.\n- `enhance` (mặc định 1): AI đẩy chi tiết, chỉ khoá màu/mảng lớn theo gốc. Thấy bịa/lệch vân → hạ 0.5 hoặc 0 (bám gốc).\n- `structure_lock` (mặc định 0.5): chặn AI vẽ lại hình lá/cỏ/vân đá. Lá, cỏ vẫn đổi dáng → 0.7; muốn AI tự do hơn → 0.3.\n- Đẩy chi tiết mạnh nhất: bật node LoRA (Ctrl+B) với LoRA upscale riêng (vd Lora_DB_upscale_mir 0.8) + từ khoá của LoRA trong prompt.\n\n**DB9U SR Refine** (sau Upscale): làm nét bằng upscale model, giữ nguyên kích thước. `strength` 0.4–0.8. Chỉnh thông số → Run chỉ trộn lại vài giây (seed Upscale để fixed). Tắt: strength = 0 hoặc Bypass (Ctrl+B)."
+    "# DB9U — FLUX.2 Klein 9B · TEST profile klein_detail\n\n**Mục đích:** lấy độ chi tiết vật liệu của workflow cũ (BBB-UpscaleF2K9B: LoRA DB9_Upscale_Ver004 0.8 + denoise 0.5) nhưng không lệch màu/form.\n\nKhác workflow cũ: cfg 1 (cũ 3.5 với pos=neg chỉ tốn gấp đôi) · ô gốc đưa vào reference_latents (Klein sửa ô, không vẽ lại) · seed cố định mọi ô · enhance 1 + structure_lock 0.5 + flow_align + khoá màu cục bộ Lab (cũ chỉ khớp mean/std cả ô) · không unsharp chồng.\n\n**Bước test:**\n1. Load Image = TU2119_Cam_002.jpg. Kiểm LoRA + Upscale model không báo đỏ (chọn lại file nếu cần).\n2. Run: preview_tile bật, **preview_pick** (cuối Advanced Settings) = 3 ô khó nhất, preview_denoise 0.35,0.45,0.55 → bảng 3 ô × 3 denoise. Muốn ô cụ thể: preview_pick = ô đã chọn + bấm 🔲 Chọn ô trên bảng.\n3. Chọn denoise ưng → đặt vào DB9U Upscale, tắt preview_tile → Run full (6K).\n4. So: profile flux2_klein_distilled (ref strip) cùng denoise để thấy tác dụng reference.\n\nLệch form/vật liệu còn nhiều → structure_lock 0.7 hoặc denoise ↓.\n\n**Muốn chi tiết mạnh (nếp gối, sợi mây, vân vải) — chỉnh theo thứ tự, mỗi lần 1 nấc:**\n| Widget | Mặc định | Đẩy chi tiết | Vì sao |\n|---|---|---|---|\n| material_denoise | -1 (=min(denoise,0.4)) | = denoise (0.5–0.55) | vải/gỗ/mây là vùng 'vật liệu' → đang bị chặn 0.4 |\n| structure_lock | 0.5 | 0.2–0.3 | nếp gối mới không có trong gốc → bị cổng tương quan cắt |\n| lock_sigma | 8 | 14–20 | nếp nhăn cỡ 10–30px; khoá màu ở 8px làm phẳng lại theo gốc |\n| LoRA strength | 0.8 | 1.0 | |\nĐẩy mạnh cả ảnh dễ bịa ở đá/lá → nên dùng **Region Fix**: chỉ tô gối + ghế, denoise 0.55–0.6, phần còn lại giữ chặt.\n\n---\n# DB9 Ultimate — FLUX.2 Klein 9B\n\n**Chỉ cần chỉnh:** `target` (x2/x3/x4/6K/8K/10K/11K) · `denoise` · `cfg` (0 = tự theo model) · `preset`.\nMọi thứ khác tự động: profile model, cỡ ô theo VRAM, số lượt (≤2x/lượt), lô ô trên GPU lớn, denoise vùng lá (+0.2), khoá màu, khoá viền kiến trúc, chạy lại ô lệch, giảm cỡ ô khi hết VRAM.\n\n| Triệu chứng | Chỉnh |\n|---|---|\n| Chưa đủ chi tiết | denoise ↑ (0.45–0.55) |\n| Lệch form/viền | denoise ↓ (0.3–0.35) hoặc bật ControlNet |\n| Lá nhoè | DB9U Advanced Settings → texture_denoise 0.7 |\n| Chậm | preset fast |\n\nTinh chỉnh sâu: thêm node **DB9U Advanced Settings** → nối vào `settings`.\nLog (console + node Log) ghi rõ profile, GPU, số ô, thời gian còn lại.\n**DB9U Finish (1 node):** chỉnh màu (Basic/Presence/Curves/HSL/Color Balance/Selective/LUT) + so sánh trước/sau (rê chuột trên ảnh trong node) + lưu.\n- save_file tắt + live_edit bật: kéo thanh là tự chạy lại trên preview (chỉ node này chạy; seed node Upscale để fixed).\n- Ưng rồi: bật save_file → Run → lưu full-res (local_folder hoặc output ComfyUI; cloud tự lưu output).\nProfile tự nhận = Klein distilled (4 steps, cfg 1). Klein base/FLUX.2 dev: chọn profile trong Advanced Settings.\nLoRA: bật node LoRA (Ctrl+B). ControlNet: chỉ dùng loại tương thích FLUX.2 — loại không tương thích sẽ tự tắt.\n\n**Advanced Settings (đã nối sẵn):**\n- Bảng ô: `preview_tile` = true, `preview_tiles` trống → Run → bấm **🔲 Chọn ô trên bảng** → Áp dụng & chạy.\n- `preview_layout` frame: ô preview đặt đúng chỗ trên cả khung → so với gốc trong Finish. `preview_denoise` \"0.3,0.4,0.5\" để so mức denoise.\n- `reuse_preview`: tắt preview_tile chạy full sẽ dùng lại ô đã preview (ảnh 1 lượt, giữ nguyên thông số).\n- `despeckle` 0.3–0.5 nếu tường vữa lấm tấm đốm render.\n- `enhance` (mặc định 1): AI đẩy chi tiết, chỉ khoá màu/mảng lớn theo gốc. Thấy bịa/lệch vân → hạ 0.5 hoặc 0 (bám gốc).\n- `structure_lock` (mặc định 0.5): chặn AI vẽ lại hình lá/cỏ/vân đá. Lá, cỏ vẫn đổi dáng → 0.7; muốn AI tự do hơn → 0.3.\n- Đẩy chi tiết mạnh nhất: bật node LoRA (Ctrl+B) với LoRA upscale riêng (vd Lora_DB_upscale_mir 0.8) + từ khoá của LoRA trong prompt.\n\n**DB9U SR Refine** (sau Upscale): làm nét bằng upscale model, giữ nguyên kích thước. `strength` 0.4–0.8. Chỉnh thông số → Run chỉ trộn lại vài giây (seed Upscale để fixed). Tắt: strength = 0 hoặc Bypass (Ctrl+B)."
    ],
    "title": "Note",
    "color": "#432",
@@ -870,7 +870,7 @@
     "Node name for S&R": "DB9U_Settings"
    },
    "widgets_values": [
-    "auto",
+    "flux2_klein_detail",
     0,
     0,
     0,
@@ -896,7 +896,7 @@
     0.0,
     0.8,
     true,
-    false,
+    true,
     4.0,
     -1.0,
     0.6,
@@ -905,16 +905,17 @@
     true,
     0.0,
     "",
-    "",
+    "0.35,0.45,0.55",
     true,
     0.0,
     "frame",
     1.0,
     0.5,
     true,
-    "ô đã chọn",
+    "3 ô khó nhất",
     1.0
-   ]
+   ],
+   "title": "DB9U Advanced Settings — TEST klein_detail"
   },
   {
    "id": 25,
@@ -1252,7 +1253,7 @@
     "Node name for S&R": "DB9U_FluxMatch"
    },
    "widgets_values": [
-    0.0,
+    0.5,
     true
    ],
    "title": "DB9U Flux Match — kéo flux_like (0 = DB9U · 1 = giống bộ flux cũ)"
@@ -1619,7 +1620,8 @@
     300,
     100
    ]
-  }
+  },
+  "info": {}
  },
  "version": 0.4
 }

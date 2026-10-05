@@ -1,6 +1,6 @@
 {
- "last_node_id": 20,
- "last_link_id": 15,
+ "last_node_id": 30,
+ "last_link_id": 31,
  "nodes": [
   {
    "id": 1,
@@ -22,8 +22,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      2,
-      9
+      2
      ]
     },
     {
@@ -54,14 +53,15 @@
    ],
    "flags": {},
    "order": 5,
-   "mode": 4,
+   "mode": 0,
    "inputs": [],
    "outputs": [
     {
      "name": "UPSCALE_MODEL",
      "type": "UPSCALE_MODEL",
      "links": [
-      7
+      7,
+      18
      ]
     }
    ],
@@ -93,7 +93,8 @@
      "name": "MODEL",
      "type": "MODEL",
      "links": [
-      3
+      3,
+      21
      ]
     }
    ],
@@ -158,7 +159,8 @@
      "name": "VAE",
      "type": "VAE",
      "links": [
-      4
+      4,
+      22
      ]
     }
    ],
@@ -207,14 +209,16 @@
      "name": "positive",
      "type": "CONDITIONING",
      "links": [
-      5
+      5,
+      23
      ]
     },
     {
      "name": "negative",
      "type": "CONDITIONING",
      "links": [
-      6
+      6,
+      24
      ]
     },
     {
@@ -253,7 +257,8 @@
      "name": "control_net",
      "type": "QWEN21_FUN_CONTROLNET",
      "links": [
-      8
+      8,
+      26
      ]
     }
    ],
@@ -332,7 +337,7 @@
     {
      "name": "settings",
      "type": "DB9U_SETTINGS",
-     "link": null,
+     "link": 19,
      "shape": 7
     }
    ],
@@ -347,20 +352,23 @@
     {
      "name": "original_resized",
      "type": "IMAGE",
-     "links": []
+     "links": [
+      12,
+      9
+     ]
     },
     {
      "name": "log",
      "type": "STRING",
      "links": [
-      15
+      16
      ]
     },
     {
-     "name": "texture_mask",
+     "name": "zone_map",
      "type": "IMAGE",
      "links": [
-      13
+      14
      ]
     }
    ],
@@ -402,7 +410,7 @@
     {
      "name": "result",
      "type": "IMAGE",
-     "link": 10
+     "link": 17
     }
    ],
    "outputs": [
@@ -417,14 +425,14 @@
      "name": "deltaE_heatmap",
      "type": "IMAGE",
      "links": [
-      12
+      13
      ]
     },
     {
      "name": "report",
      "type": "STRING",
      "links": [
-      14
+      15
      ]
     },
     {
@@ -453,7 +461,7 @@
     0.85,
     0.8,
     1.0,
-    true
+    false
    ],
    "title": "DB9U QAQC",
    "color": "#223",
@@ -461,40 +469,125 @@
   },
   {
    "id": 12,
-   "type": "SaveImage",
+   "type": "DB9U_Finish",
    "pos": [
     1700,
     0
    ],
    "size": [
-    420,
-    460
+    460,
+    1900
    ],
    "flags": {},
    "order": 12,
    "mode": 0,
    "inputs": [
     {
-     "name": "images",
+     "name": "image",
      "type": "IMAGE",
      "link": 11
+    },
+    {
+     "name": "original",
+     "type": "IMAGE",
+     "link": 12,
+     "shape": 7
     }
    ],
-   "outputs": [],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": []
+    },
+    {
+     "name": "saved_path",
+     "type": "STRING",
+     "links": []
+    }
+   ],
    "properties": {
-    "Node name for S&R": "SaveImage"
+    "Node name for S&R": "DB9U_Finish"
    },
    "widgets_values": [
-    "DB9U/img"
+    false,
+    true,
+    "DB9U/img",
+    "auto",
+    "",
+    "png16",
+    2048,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    "",
+    "",
+    "",
+    "",
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    "reds",
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    "none",
+    "",
+    1.0
    ],
-   "title": "Lưu (image_safe)"
+   "title": "DB9U Finish — chỉnh màu · so sánh (rê chuột trên ảnh) · lưu",
+   "color": "#232",
+   "bgcolor": "#353"
   },
   {
    "id": 14,
    "type": "PreviewImage",
    "pos": [
-    1700,
-    500
+    2200,
+    0
    ],
    "size": [
     420,
@@ -502,34 +595,6 @@
    ],
    "flags": {},
    "order": 14,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "images",
-     "type": "IMAGE",
-     "link": 12
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "PreviewImage"
-   },
-   "widgets_values": [],
-   "title": "Heatmap lệch màu"
-  },
-  {
-   "id": 15,
-   "type": "PreviewImage",
-   "pos": [
-    1700,
-    840
-   ],
-   "size": [
-    420,
-    300
-   ],
-   "flags": {},
-   "order": 15,
    "mode": 0,
    "inputs": [
     {
@@ -543,7 +608,35 @@
     "Node name for S&R": "PreviewImage"
    },
    "widgets_values": [],
-   "title": "Texture mask (trắng = denoise cao)"
+   "title": "Heatmap lệch màu"
+  },
+  {
+   "id": 15,
+   "type": "PreviewImage",
+   "pos": [
+    2200,
+    340
+   ],
+   "size": [
+    420,
+    300
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 14
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": [],
+   "title": "Zone map (sáng = denoise cao · trời tối)"
   },
   {
    "id": 16,
@@ -563,7 +656,7 @@
     {
      "name": "source",
      "type": "*",
-     "link": 14
+     "link": 15
     }
    ],
    "outputs": [
@@ -597,7 +690,7 @@
     {
      "name": "source",
      "type": "*",
-     "link": 15
+     "link": 16
     }
    ],
    "outputs": [
@@ -631,11 +724,427 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "# DB9 Ultimate — Qwen-Image 2.1\n\n**Chỉ cần chỉnh:** `target` (x2/x3/x4/6K/8K/10K/11K) · `denoise` · `cfg` (0 = tự theo model) · `preset`.\nMọi thứ khác tự động: profile model, cỡ ô theo VRAM, số lượt (≤2x/lượt), lô ô trên GPU lớn, denoise vùng lá (+0.2), khoá màu, khoá viền kiến trúc, chạy lại ô lệch, giảm cỡ ô khi hết VRAM.\n\n| Triệu chứng | Chỉnh |\n|---|---|\n| Chưa đủ chi tiết | denoise ↑ (0.45–0.55) |\n| Lệch form/viền | denoise ↓ (0.3–0.35) hoặc bật ControlNet |\n| Lá nhoè | DB9U Advanced Settings → texture_denoise 0.7 |\n| Chậm | preset fast |\n\nTinh chỉnh sâu: thêm node **DB9U Advanced Settings** → nối vào `settings`.\nLog (console + node Log) ghi rõ profile, GPU, số ô, thời gian còn lại.\nControlNet: bật node Qwen 2.1 Fun (cần custom node b2renger + file 7GB trong models/controlnet)."
+    "# DB9 Ultimate — Qwen-Image 2.1\n\n**Chỉ cần chỉnh:** `target` (x2/x3/x4/6K/8K/10K/11K) · `denoise` · `cfg` (0 = tự theo model) · `preset`.\nMọi thứ khác tự động: profile model, cỡ ô theo VRAM, số lượt (≤2x/lượt), lô ô trên GPU lớn, denoise vùng lá (+0.2), khoá màu, khoá viền kiến trúc, chạy lại ô lệch, giảm cỡ ô khi hết VRAM.\n\n| Triệu chứng | Chỉnh |\n|---|---|\n| Chưa đủ chi tiết | denoise ↑ (0.45–0.55) |\n| Lệch form/viền | denoise ↓ (0.3–0.35) hoặc bật ControlNet |\n| Lá nhoè | DB9U Advanced Settings → texture_denoise 0.7 |\n| Chậm | preset fast |\n\nTinh chỉnh sâu: thêm node **DB9U Advanced Settings** → nối vào `settings`.\nLog (console + node Log) ghi rõ profile, GPU, số ô, thời gian còn lại.\n**DB9U Finish (1 node):** chỉnh màu (Basic/Presence/Curves/HSL/Color Balance/Selective/LUT) + so sánh trước/sau (rê chuột trên ảnh trong node) + lưu.\n- save_file tắt + live_edit bật: kéo thanh là tự chạy lại trên preview (chỉ node này chạy; seed node Upscale để fixed).\n- Ưng rồi: bật save_file → Run → lưu full-res (local_folder hoặc output ComfyUI; cloud tự lưu output).\nControlNet: bật node Qwen 2.1 Fun (cần custom node b2renger + file 7GB trong models/controlnet).\n\n**Advanced Settings (đã nối sẵn):**\n- Bảng ô: `preview_tile` = true, `preview_tiles` trống → Run → bấm **🔲 Chọn ô trên bảng** → Áp dụng & chạy.\n- `preview_layout` frame: ô preview đặt đúng chỗ trên cả khung → so với gốc trong Finish. `preview_denoise` \"0.3,0.4,0.5\" để so mức denoise.\n- `reuse_preview`: tắt preview_tile chạy full sẽ dùng lại ô đã preview (ảnh 1 lượt, giữ nguyên thông số).\n- `despeckle` 0.3–0.5 nếu tường vữa lấm tấm đốm render.\n- `enhance` (mặc định 1): AI đẩy chi tiết, chỉ khoá màu/mảng lớn theo gốc. Thấy bịa/lệch vân → hạ 0.5 hoặc 0 (bám gốc).\n- `structure_lock` (mặc định 0.5): chặn AI vẽ lại hình lá/cỏ/vân đá. Lá, cỏ vẫn đổi dáng → 0.7; muốn AI tự do hơn → 0.3.\n\n**DB9U SR Refine** (sau Upscale): làm nét bằng upscale model, giữ nguyên kích thước. `strength` 0.4–0.8. Chỉnh thông số → Run chỉ trộn lại vài giây (seed Upscale để fixed). Tắt: strength = 0 hoặc Bypass (Ctrl+B)."
    ],
    "title": "Note",
    "color": "#432",
    "bgcolor": "#653"
+  },
+  {
+   "id": 23,
+   "type": "DB9U_SRRefine",
+   "pos": [
+    1280,
+    980
+   ],
+   "size": [
+    380,
+    200
+   ],
+   "flags": {},
+   "order": 23,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 10
+    },
+    {
+     "name": "upscale_model",
+     "type": "UPSCALE_MODEL",
+     "link": 18
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": [
+      17
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "DB9U_SRRefine"
+   },
+   "widgets_values": [
+    0.6,
+    "detail_only",
+    1.5,
+    512
+   ],
+   "title": "DB9U SR Refine (làm nét, giữ kích thước)"
+  },
+  {
+   "id": 24,
+   "type": "DB9U_Settings",
+   "pos": [
+    380,
+    1050
+   ],
+   "size": [
+    420,
+    1000
+   ],
+   "flags": {},
+   "order": 24,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "settings",
+     "type": "DB9U_SETTINGS",
+     "links": [
+      19,
+      27
+     ],
+     "slot_index": 0
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "DB9U_Settings"
+   },
+   "widgets_values": [
+    "auto",
+    0,
+    0,
+    0,
+    2.0,
+    0,
+    0,
+    "auto",
+    "auto",
+    -1.0,
+    -1.0,
+    0.25,
+    -1,
+    6.0,
+    true,
+    "fixed",
+    "auto",
+    "detail_transfer",
+    1.0,
+    8.0,
+    0.8,
+    "auto",
+    -1.0,
+    0.0,
+    0.8,
+    true,
+    false,
+    4.0,
+    -1.0,
+    0.6,
+    2.0,
+    true,
+    true,
+    0.0,
+    "",
+    "",
+    true,
+    0.0,
+    "frame",
+    1.0,
+    0.5,
+    true,
+    "ô đã chọn",
+    1.0
+   ]
+  },
+  {
+   "id": 25,
+   "type": "LoadImage",
+   "pos": [
+    380,
+    1500
+   ],
+   "size": [
+    340,
+    420
+   ],
+   "flags": {},
+   "order": 30,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": []
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": [
+      25
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "db9u_mask_img_00001.jpg",
+    "image"
+   ],
+   "title": "2) Chọn db9u_mask_<tên>.jpg (bấm R làm mới) > Open in MaskEditor > tô vùng"
+  },
+  {
+   "id": 26,
+   "type": "DB9U_RegionFix",
+   "pos": [
+    1220,
+    1500
+   ],
+   "size": [
+    400,
+    460
+   ],
+   "flags": {},
+   "order": 31,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 31
+    },
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 21
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 22
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 23
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 24
+    },
+    {
+     "name": "region_mask",
+     "type": "MASK",
+     "link": 25,
+     "shape": 7
+    },
+    {
+     "name": "region_box",
+     "type": "STRING",
+     "link": null,
+     "shape": 7,
+     "widget": {
+      "name": "region_box"
+     }
+    },
+    {
+     "name": "control_net",
+     "type": "CONTROL_NET",
+     "link": null,
+     "shape": 7
+    },
+    {
+     "name": "qwen21_controlnet",
+     "type": "QWEN21_FUN_CONTROLNET",
+     "link": 26,
+     "shape": 7
+    },
+    {
+     "name": "settings",
+     "type": "DB9U_SETTINGS",
+     "link": 27,
+     "shape": 7
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": [
+      28
+     ]
+    },
+    {
+     "name": "before_after",
+     "type": "IMAGE",
+     "links": [
+      29
+     ]
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": [
+      30
+     ]
+    },
+    {
+     "name": "region_mask",
+     "type": "MASK",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "DB9U_RegionFix"
+   },
+   "widgets_values": [
+    0.35,
+    0.0,
+    0,
+    "fixed",
+    96,
+    24,
+    1.0,
+    true,
+    ""
+   ],
+   "title": "DB9U Region Fix (sửa vùng + ghép chuẩn)"
+  },
+  {
+   "id": 27,
+   "type": "SaveImage",
+   "pos": [
+    1660,
+    1500
+   ],
+   "size": [
+    400,
+    420
+   ],
+   "flags": {},
+   "order": 32,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 28
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "DB9U/regionfix"
+   ],
+   "title": "Ảnh đã sửa vùng"
+  },
+  {
+   "id": 28,
+   "type": "PreviewImage",
+   "pos": [
+    2080,
+    1500
+   ],
+   "size": [
+    400,
+    420
+   ],
+   "flags": {},
+   "order": 33,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 29
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "PreviewImage"
+   },
+   "widgets_values": [],
+   "title": "Trước | Sau"
+  },
+  {
+   "id": 29,
+   "type": "PreviewAny",
+   "pos": [
+    2500,
+    1500
+   ],
+   "size": [
+    380,
+    260
+   ],
+   "flags": {},
+   "order": 34,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "source",
+     "type": "*",
+     "link": 30
+    }
+   ],
+   "outputs": [
+    {
+     "name": "STRING",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "PreviewAny"
+   },
+   "widgets_values": [],
+   "title": "Log Region Fix"
+  },
+  {
+   "id": 30,
+   "type": "DB9U_RegionSource",
+   "pos": [
+    0,
+    1500
+   ],
+   "size": [
+    340,
+    160
+   ],
+   "flags": {},
+   "order": 29,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": null,
+     "shape": 7
+    }
+   ],
+   "outputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "links": [
+      31
+     ]
+    },
+    {
+     "name": "proxy_name",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "DB9U_RegionSource"
+   },
+   "widgets_values": [
+    "DB9U/img_00001.png",
+    2048
+   ],
+   "title": "1) Ảnh lớn cần sửa (path, không upload)"
   }
  ],
  "links": [
@@ -705,8 +1214,8 @@
   ],
   [
    9,
+   10,
    1,
-   0,
    11,
    0,
    "IMAGE"
@@ -715,8 +1224,8 @@
    10,
    10,
    0,
-   11,
-   1,
+   23,
+   0,
    "IMAGE"
   ],
   [
@@ -729,6 +1238,14 @@
   ],
   [
    12,
+   10,
+   1,
+   12,
+   1,
+   "IMAGE"
+  ],
+  [
+   13,
    11,
    1,
    14,
@@ -736,7 +1253,7 @@
    "IMAGE"
   ],
   [
-   13,
+   14,
    10,
    3,
    15,
@@ -744,7 +1261,7 @@
    "IMAGE"
   ],
   [
-   14,
+   15,
    11,
    2,
    16,
@@ -752,15 +1269,139 @@
    "STRING"
   ],
   [
-   15,
+   16,
    10,
    2,
    17,
    0,
    "STRING"
+  ],
+  [
+   17,
+   23,
+   0,
+   11,
+   1,
+   "IMAGE"
+  ],
+  [
+   18,
+   5,
+   0,
+   23,
+   1,
+   "UPSCALE_MODEL"
+  ],
+  [
+   19,
+   24,
+   0,
+   10,
+   9,
+   "DB9U_SETTINGS"
+  ],
+  [
+   21,
+   2,
+   0,
+   26,
+   1,
+   "MODEL"
+  ],
+  [
+   22,
+   4,
+   0,
+   26,
+   2,
+   "VAE"
+  ],
+  [
+   23,
+   6,
+   0,
+   26,
+   3,
+   "CONDITIONING"
+  ],
+  [
+   24,
+   6,
+   1,
+   26,
+   4,
+   "CONDITIONING"
+  ],
+  [
+   25,
+   25,
+   1,
+   26,
+   5,
+   "MASK"
+  ],
+  [
+   26,
+   13,
+   0,
+   26,
+   8,
+   "QWEN21_FUN_CONTROLNET"
+  ],
+  [
+   27,
+   24,
+   0,
+   26,
+   9,
+   "DB9U_SETTINGS"
+  ],
+  [
+   28,
+   26,
+   0,
+   27,
+   0,
+   "IMAGE"
+  ],
+  [
+   29,
+   26,
+   1,
+   28,
+   0,
+   "IMAGE"
+  ],
+  [
+   30,
+   26,
+   2,
+   29,
+   0,
+   "STRING"
+  ],
+  [
+   31,
+   30,
+   0,
+   26,
+   0,
+   "IMAGE"
   ]
  ],
- "groups": [],
+ "groups": [
+  {
+   "title": "Region Fix — 1) nhập path ảnh lớn, chạy 1 lần tạo proxy · 2) tô mask trên proxy · 3) chạy (bypass group Upscale)",
+   "bounding": [
+    -20,
+    1440,
+    2920,
+    560
+   ],
+   "color": "#3f789e",
+   "font_size": 20
+  }
+ ],
  "config": {},
  "extra": {
   "ds": {
