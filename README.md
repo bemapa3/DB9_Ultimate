@@ -67,6 +67,8 @@ Thông số gốc: supersample 2.0, color_lock 0.55, contrast_lock 0.2, sharpen 
 
 Muốn màu bám gốc hơn: `chroma_lock` 0.5–1. Muốn viền kiến trúc thẳng tuyệt đối: `edge_guard` 0.5. Nhanh hơn: `ss_source` = lanczos hoặc supersample 1.5.
 
+**Sổ tay thông số đầy đủ + công thức đẩy chi tiết lá/vải/cây: [docs/THONG_SO.md](docs/THONG_SO.md).**
+
 ## Colab
 `notebooks/DB9U_Colab.ipynb`: cài ComfyUI + DB9_Ultimate (cần GitHub token) + tải model Qwen 2.1 / FLUX.2 Klein 9B (cần HF token) + link public.
 
