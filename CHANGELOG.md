@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.12.4 — 2026-10-06
+### ✅ Đã làm
+- Chốt mặc định Forge theo test thật (Klein 9B distilled, preview 6 ô đá/mây/gỗ, 4000x2250 -> 6K):
+  - ref **tile** 0.55/0.65/0.75: ΔE 0.74/0.74/0.80 = chỉ upscale (scheduler simple hay flux2 như nhau — ở denoise true chỉ còn đuôi lịch, 2 đường gần trùng).
+  - ref **strip** 0.40/0.45/0.50: ΔE 1.89/2.14/2.41, HF chi tiết +10–20%, mây vẫn đan mây, gỗ sạch, nhanh hơn tile ~40%.
+  - ref strip 0.55: ΔE 2.9, mây thành lưới, vân gỗ xoáy.
+- Mặc định mới: **denoise 0.45**, **sharpen 0.15** (0.4 + bicubic_sharp = gắt/sạn), **ss_source lanczos** (UltraSharp chồng lên nền UltraSharp = sạn). Workflow Forge thêm edge_guard 0.5.
+- Preview: cảnh báo khi preview_denoise ra mức < 0.2 (gõ sai kiểu `0,55` -> chạy 0.05).
+- Chạy full thật (img_00027): 60 ô, 11.2 phút, ΔE TB 1.88, flow p95 0.57px — cây/đá thêm chi tiết, không lưới.
+### ⏳ Chưa làm
+- Vùng phẳng (sàn gỗ) ΔE ~0.9, gần như chỉ upscale.
+
 ## v0.12.3 — 2026-10-06
 ### ✅ Đã làm
 - **Forge preview** (như DB9U Upscale, để test denoise nhanh): widget mới ở CUỐI node `preview_tile`, `preview_tiles` (trống = bảng ô · O1,O5 · O3-O6 · auto · auto3), `preview_denoise` (vd 0.7,0.8,0.85 -> bảng hàng = ô, cột = denoise), `preview_layout` (frame/grid).

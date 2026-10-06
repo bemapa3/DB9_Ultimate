@@ -545,6 +545,9 @@ class Forge:
             return m, core.resize(lz, m.shape[2], m.shape[1], "area")
         idx = engine.parse_tiles(spec, n, score)
         ds = engine.parse_denoise_list(p.get("preview_denoise", ""), self.denoise)
+        if any(d < 0.2 for d in ds):
+            self.say(f"[DB9U Forge] CẢNH BÁO: denoise preview {', '.join(f'{d:.2f}' for d in ds)} có mức < 0.2 "
+                     f"(preview_denoise = '{p.get('preview_denoise', '')}') -> gõ dạng 0.4,0.45,0.5 (dấu chấm, phẩy ngăn)")
         self.say(f"[DB9U Forge] PREVIEW {len(idx)} ô: " + ", ".join(f"O{k + 1}" for k in idx) + f" / {n} ô"
                  + (f" | so denoise: {', '.join(f'{d:.2f}' for d in ds)}" if len(ds) > 1 else ""))
         ww, wh = self.work_size(plan["tile_w"], plan["tile_h"])
@@ -607,10 +610,10 @@ class DB9U_Forge:
                 "positive": ("CONDITIONING",),
                 "negative": ("CONDITIONING",),
                 "target": (list(engine.TARGETS.keys()), {"default": "6K"}),
-                "denoise": ("FLOAT", {"default": 0.80, "min": 0.05, "max": 1.0, "step": 0.01,
-                                      "tooltip": "denoise_mode true: = % nhiễu thật lúc bắt đầu. Flux ở ô lớn cần nhiễu cao: "
-                                                 "≤0.6 = chỉ upscale (chép nền), 0.75-0.85 = enhance, ≥0.86 = vẽ lại/méo. "
-                                                 "Xem dòng log 'mức enhance' để chỉnh"}),
+                "denoise": ("FLOAT", {"default": 0.45, "min": 0.05, "max": 1.0, "step": 0.01,
+                                      "tooltip": "denoise_mode true: = % nhiễu thật lúc bắt đầu. Test thật (Klein, ref strip): "
+                                                 "0.40-0.50 = enhance sạch (ΔE ~2), 0.55+ = bắt đầu vẽ lại chất liệu (mây thành lưới). "
+                                                 "ref tile neo chặt: ΔE ~0.7 = chỉ upscale. Xem log 'mức enhance'"}),
                 "supersample": (SUPERSAMPLE, {"default": "2.0",
                                 "tooltip": "AI vẽ ở độ phân giải gấp mấy lần ảnh ra rồi thu về (bí quyết chi tiết của bộ flux). "
                                            "2.0 = như bộ flux · 1.0 = vẽ thẳng ở kích thước ra (như DB9U Upscale)"}),
@@ -623,12 +626,14 @@ class DB9U_Forge:
                 "color_lock": ("FLOAT", {"default": 0.55, "min": 0.0, "max": 1.0, "step": 0.01,
                                          "tooltip": "Khoá màu từng ô (chỉ mean/std tần số thấp, giữ form + chi tiết AI) — như bộ flux"}),
                 "contrast_lock": ("FLOAT", {"default": 0.20, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "sharpen": ("FLOAT", {"default": 0.40, "min": 0.0, "max": 1.5, "step": 0.05,
-                                      "tooltip": "Unsharp ở độ phân giải AI vẽ, trước khi thu về (như bộ flux)"}),
+                "sharpen": ("FLOAT", {"default": 0.15, "min": 0.0, "max": 1.5, "step": 0.05,
+                                      "tooltip": "Unsharp ở độ phân giải AI vẽ, trước khi thu về. 0.15 = sạch; 0.4+ (bộ flux) dễ gắt/sạn "
+                                                 "vì downscale bicubic_sharp đã làm nét thêm"}),
                 "global_color": ("FLOAT", {"default": 0.50, "min": 0.0, "max": 1.0, "step": 0.05,
                                            "tooltip": "Khớp mean/std màu cả ảnh theo ảnh gốc (như DB9TileMerge color_lock_strength)"}),
-                "ss_source": (SS_SOURCES, {"default": "upscale_model",
-                              "tooltip": "Nguồn ô x supersample: chạy lại upscale model trên ô (như bộ flux, nét hơn) · lanczos (nhanh)"}),
+                "ss_source": (SS_SOURCES, {"default": "lanczos",
+                              "tooltip": "Nguồn ô x supersample: lanczos (sạch, nhanh) · upscale_model = chạy lại model trên ô "
+                                         "(như bộ flux, nhưng chồng lên nền đã upscale model -> dễ sạn)"}),
                 "downscale": (DOWNSCALES, {"default": "bicubic_sharp",
                               "tooltip": "Thu ô AI về: bicubic_sharp = như bộ flux (sắc nhất) · lanczos · area (mềm, sạch răng cưa)"}),
                 "seed_mode": (SEED_MODES, {"default": "per_tile", "tooltip": "per_tile = seed + số ô (như bộ flux)"}),

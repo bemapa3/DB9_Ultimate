@@ -136,7 +136,8 @@ def test_workflow_matches_node():
         if isinstance(spec, list):
             assert v in spec, (k, v)
     p = dict(zip(widgets, vals))
-    assert p["supersample"] == "2.0" and p["denoise"] == 0.8 and p["denoise_mode"] == "true" and p["flow_guard"] == 4.0
+    assert p["supersample"] == "2.0" and p["denoise"] == 0.45 and p["denoise_mode"] == "true" and p["flow_guard"] == 4.0
+    assert p["sharpen"] == 0.15 and p["ss_source"] == "lanczos" and p["reference_mode"] == "strip"
     assert p["preview_tile"] is False and p["preview_tiles"] == "" and p["preview_layout"] == "frame"
     ids = {x["id"] for x in wf["nodes"]}
     for lid, a, sa, b, sb, t in wf["links"]:

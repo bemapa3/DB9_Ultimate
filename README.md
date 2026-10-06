@@ -61,9 +61,9 @@ Nối giống workflow flux cũ: Load Checkpoint → LoRA upscale → CLIP Text 
 | Hết VRAM / crash | lỗi | hạ lô/ô, resume | hạ lô/ô, resume |
 
 Thông số gốc: supersample 2.0, color_lock 0.55, contrast_lock 0.2, sharpen 0.4–0.65, global_color 0.5, scheduler `simple` (hoặc auto = flux2), work_tile 2048 nếu VRAM ≥ 24GB.
-- `denoise_mode` = **true** (mặc định, v0.12.1): `denoise` = đúng mức nhiễu bắt đầu (0.5 → 50% nhiễu). Kiểu `scheduler` cũ của Comfy với flux2 cắt đuôi lịch → denoise 0.5 thực tế nhiễu ~0.86 (gần vẽ lại hết → méo). Log in `denoise thật: nhiễu bắt đầu X`. Flux ở ô lớn cần nhiễu cao: ≤0.6 chỉ upscale (chép nền), **0.75–0.85 enhance** (0.8 mặc định), ≥0.86 méo. Cuối lượt log `mức enhance: ΔE trung bình` tự gợi ý tăng/hạ.
+- `denoise_mode` = **true** (mặc định, v0.12.1): `denoise` = đúng mức nhiễu bắt đầu (0.5 → 50% nhiễu). Kiểu `scheduler` cũ của Comfy với flux2 cắt đuôi lịch → denoise 0.5 thực tế nhiễu ~0.86 (gần vẽ lại hết → méo). Log in `denoise thật: nhiễu bắt đầu X`. Test thật (Klein, ref strip): **0.40–0.50 enhance sạch** (0.45 mặc định, ΔE ~2), 0.55+ bắt đầu vẽ lại chất liệu (mây thành lưới). ref tile = chỉ upscale (ΔE ~0.7). Mặc định sharpen 0.15, ss_source lanczos. Cuối lượt log `mức enhance: ΔE trung bình` tự gợi ý tăng/hạ.
 - `flow_guard` (px, mặc định 4): flow chỉ kéo chỗ AI trôi nhẹ (≤ guard) về đúng hình gốc; chỗ AI lệch > 2×guard (vẽ lại khác hẳn) giữ nguyên nét AI thay vì kéo giãn → hết méo kiểu "ảnh bị bóp". 0 = kéo hết như cũ. Log `căn flow p95 … / % ảnh lệch`.
-- **Preview** (v0.12.3, như DB9U Upscale): bật `preview_tile`, `preview_tiles` trống → bảng ô → bấm `🔲 Chọn ô trên bảng` trên node Forge, gõ `0.7,0.8,0.85` → bảng so denoise + log `mức enhance` từng mức. Tắt preview chạy full dùng lại ô ở denoise chính.
+- **Preview** (v0.12.3, như DB9U Upscale): bật `preview_tile`, `preview_tiles` trống → bảng ô → bấm `🔲 Chọn ô trên bảng` trên node Forge, gõ `0.4,0.45,0.5` → bảng so denoise + log `mức enhance` từng mức. Tắt preview chạy full dùng lại ô ở denoise chính.
 
 Muốn màu bám gốc hơn: `chroma_lock` 0.5–1. Muốn viền kiến trúc thẳng tuyệt đối: `edge_guard` 0.5. Nhanh hơn: `ss_source` = lanczos hoặc supersample 1.5.
 

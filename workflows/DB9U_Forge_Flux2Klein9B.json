@@ -385,7 +385,7 @@
    },
    "widgets_values": [
     "6K",
-    0.8,
+    0.45,
     "2.0",
     0,
     "fixed",
@@ -395,9 +395,9 @@
     "auto",
     0.55,
     0.2,
-    0.4,
+    0.15,
     0.5,
-    "upscale_model",
+    "lanczos",
     "bicubic_sharp",
     "per_tile",
     "strip",
@@ -409,7 +409,7 @@
     0,
     8.0,
     0.0,
-    0.0,
+    0.5,
     "auto",
     0,
     true,
@@ -591,7 +591,7 @@
     "Node name for S&R": "MarkdownNote"
    },
    "widgets_values": [
-    "# DB9U Forge — tạo hình Flux + ghép Ultimate\n\nNode riêng, KHÔNG cần Advanced Settings. Nối y như workflow flux cũ (260531-Upscale_F2K9B):\nCheckpoint → LoRA upscale_mir 0.8 → LoRA noise offset 0.8 → prompt (cắm cả positive lẫn negative) + 4x-UltraSharp → **DB9U Forge** → Finish.\n\n## Cách tạo hình (giống bộ flux)\n- **supersample 2.0**: AI vẽ mỗi ô ở x2 kích thước ra rồi thu về → chi tiết mịn, sắc (bí quyết của bộ flux).\n- **ss_source upscale_model**: nguồn x2 = chạy lại UltraSharp trên ô (như flux). `lanczos` = nhanh hơn, mềm hơn.\n- **color_lock 0.55 / contrast_lock 0.2**: chỉ chỉnh thống kê mảng lớn từng ô → giữ hình khối AI vẽ.\n- **sharpen 0.4** (flux 0.4–0.65), **downscale bicubic_sharp**, **global_color 0.5**.\n\n## Cách ghép (giống Ultimate)\nÔ đều bội 32, dốc tuyến tính đúng vùng giao (không vết nối), căn trôi từng ô, flow_align cả ảnh, hết VRAM tự hạ lô/ô, crash chạy lại dùng tiếp ô đã xong (resume).\n\n## Denoise THẬT (denoise_mode = true)\nSố denoise = % nhiễu lúc bắt đầu. Log in dòng `denoise thật: nhiễu bắt đầu ...`.\nBản trước (scheduler flux2) denoise 0.3 ≈ nhiễu 73%, 0.5 ≈ 86% -> AI vẽ lại hình, méo.\nChạy thật: nhiễu thật 0.6 = ΔE ~0.5, chỉ upscale không enhance. Mặc định **0.8**; thử 0.75 / 0.8 / 0.85.\nCuối lượt log `mức enhance: ΔE trung bình ...` tự gợi ý: < 1.5 = chép nền (tăng), 1.5–6 = tốt, > 6 = dễ méo (hạ).\n\n## flow_guard 4px\nCăn flow chỉ kéo về chỗ AI trôi < 4px. Chỗ AI vẽ lại hình (lệch lớn) giữ nguyên hình AI, không kéo giãn -> hết méo do căn.\nLog: `AI lệch p95 ...px | ...% ảnh lệch > 4px`. p95 < 3px = AI giữ hình tốt.\n\n## Preview (test nhanh, như DB9U Upscale)\n1. Bật `preview_tile`, để trống `preview_tiles` -> chạy: vẽ BẢNG Ô vài giây.\n2. Bấm `🔲 Chọn ô trên bảng` trên node -> chọn 2-3 ô khó, gõ denoise so sánh (vd 0.7,0.8,0.85) -> Áp dụng & chạy.\n3. Xem bảng ô (hàng = ô, cột = denoise) + log `mức enhance (denoise X)` -> chọn denoise.\n4. Tắt `preview_tile` chạy full: ô preview ở denoise chính được dùng lại.\n\n## Chỉnh nhanh\n| Muốn | Chỉnh |\n|---|---|\n| Nhiều chi tiết / AI vẽ lại nhiều hơn | `denoise` 0.85 |\n| Bám gốc hơn | `denoise` 0.7–0.75 |\n| Bám bố cục chặt hơn (nhưng ít enhance, chậm x2) | `reference_mode` tile |\n| Màu chi tiết đúng gốc (hết lá hồng, cành tím) | `chroma_lock` 0.5–1 |\n| Viền kiến trúc thẳng tuyệt đối | `edge_guard` 0.5 |\n| Ít răng cưa, mịn hơn | `downscale` lanczos / area |\n| Nhanh hơn | `ss_source` lanczos · `supersample` 1.5 · `work_tile` lớn hơn (VRAM ≥ 24GB: 2048) |\n| Ô lệch màu tự chạy lại | `tile_retries` 1 |\n\n`cfg` 0 = theo profile (Klein 1). Positive = negative mà cfg > 1 → node tự ép cfg 1 (kết quả y hệt, nhanh gấp đôi).\nSeed để `fixed` thì chỉnh Finish không chạy lại upscale.\n"
+    "# DB9U Forge — tạo hình Flux + ghép Ultimate\n\nNode riêng, KHÔNG cần Advanced Settings. Nối y như workflow flux cũ (260531-Upscale_F2K9B):\nCheckpoint → LoRA upscale_mir 0.8 → LoRA noise offset 0.8 → prompt (cắm cả positive lẫn negative) + 4x-UltraSharp → **DB9U Forge** → Finish.\n\n## Cách tạo hình (giống bộ flux)\n- **supersample 2.0**: AI vẽ mỗi ô ở x2 kích thước ra rồi thu về → chi tiết mịn, sắc (bí quyết của bộ flux).\n- **ss_source lanczos**: nguồn x2 sạch. `upscale_model` = chạy lại UltraSharp trên ô (như flux) nhưng chồng lên nền UltraSharp -> dễ sạn.\n- **color_lock 0.55 / contrast_lock 0.2**: chỉ chỉnh thống kê mảng lớn từng ô → giữ hình khối AI vẽ.\n- **sharpen 0.15** (0.4 của flux + bicubic_sharp = gắt/sạn), **downscale bicubic_sharp**, **global_color 0.5**, **edge_guard 0.5** (viền kiến trúc thẳng).\n\n## Cách ghép (giống Ultimate)\nÔ đều bội 32, dốc tuyến tính đúng vùng giao (không vết nối), căn trôi từng ô, flow_align cả ảnh, hết VRAM tự hạ lô/ô, crash chạy lại dùng tiếp ô đã xong (resume).\n\n## Denoise THẬT (denoise_mode = true)\nSố denoise = % nhiễu lúc bắt đầu. Log in dòng `denoise thật: nhiễu bắt đầu ...`.\nBản trước (scheduler flux2) denoise 0.3 ≈ nhiễu 73%, 0.5 ≈ 86% -> AI vẽ lại hình, méo.\nTest thật (Klein 9B distilled, 4 steps, 6 ô đá/mây/gỗ):\n| reference_mode | denoise | ΔE | Kết quả |\n|---|---|---|---|\n| tile | 0.55–0.75 | ~0.75 | sạch nhưng chỉ upscale (scheduler simple/flux2 như nhau) |\n| **strip** | **0.40–0.50** | **1.9–2.4** | enhance sạch, mây vẫn đan mây — **mặc định 0.45** |\n| strip | 0.55 | ~2.9 | mây thành lưới, vân gỗ xoáy |\nCuối lượt log `mức enhance: ΔE trung bình ...` tự gợi ý: < 1.5 = chép nền (tăng), 1.5–6 = tốt, > 6 = dễ méo (hạ).\n\n## flow_guard 4px\nCăn flow chỉ kéo về chỗ AI trôi < 4px. Chỗ AI vẽ lại hình (lệch lớn) giữ nguyên hình AI, không kéo giãn -> hết méo do căn.\nLog: `AI lệch p95 ...px | ...% ảnh lệch > 4px`. p95 < 3px = AI giữ hình tốt.\n\n## Preview (test nhanh, như DB9U Upscale)\n1. Bật `preview_tile`, để trống `preview_tiles` -> chạy: vẽ BẢNG Ô vài giây.\n2. Bấm `🔲 Chọn ô trên bảng` trên node -> chọn 2-3 ô khó, gõ denoise so sánh (vd 0.4,0.45,0.5) -> Áp dụng & chạy.\n3. Xem bảng ô (hàng = ô, cột = denoise) + log `mức enhance (denoise X)` -> chọn denoise.\n4. Tắt `preview_tile` chạy full: ô preview ở denoise chính được dùng lại.\n\n## Chỉnh nhanh\n| Muốn | Chỉnh |\n|---|---|\n| Nhiều chi tiết hơn | `denoise` 0.5 (0.55+ bắt đầu vẽ lại chất liệu) |\n| Bám gốc hơn | `denoise` 0.35–0.4 |\n| Chỉ upscale sạch, không đổi gì | `reference_mode` tile |\n| Màu chi tiết đúng gốc (hết lá hồng, cành tím) | `chroma_lock` 0.5–1 |\n| Viền kiến trúc thẳng tuyệt đối | `edge_guard` 0.5 |\n| Ít răng cưa, mịn hơn | `downscale` lanczos / area |\n| Nhanh hơn | `ss_source` lanczos · `supersample` 1.5 · `work_tile` lớn hơn (VRAM ≥ 24GB: 2048) |\n| Ô lệch màu tự chạy lại | `tile_retries` 1 |\n\n`cfg` 0 = theo profile (Klein 1). Positive = negative mà cfg > 1 → node tự ép cfg 1 (kết quả y hệt, nhanh gấp đôi).\nSeed để `fixed` thì chỉnh Finish không chạy lại upscale.\n"
    ],
    "title": "Hướng dẫn DB9U Forge"
   }
