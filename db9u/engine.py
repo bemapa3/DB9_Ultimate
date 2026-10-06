@@ -75,6 +75,25 @@ def preview_spec(s):
     return str(s.get("preview_tiles", "") or "").strip() if v is None else v
 
 
+# v0.12.5: nút "Reset preview" -> xoá hết output/db9u_cache (ô preview + ô resume) và tăng token.
+# Token trả qua IS_CHANGED của DB9U Upscale/Forge -> lần Run sau ComfyUI chạy lại node thật (không lấy kết quả cũ).
+RESET_TOKEN = [0]
+
+
+def cache_root():
+    import folder_paths
+    return os.path.join(folder_paths.get_output_directory(), "db9u_cache")
+
+
+def reset_preview_cache():
+    """Xoá toàn bộ cache DB9U. Trả số bộ cache (ảnh+thông số) đã xoá."""
+    root = cache_root()
+    n = len(os.listdir(root)) if os.path.isdir(root) else 0
+    shutil.rmtree(root, ignore_errors=True)
+    RESET_TOKEN[0] += 1
+    return n
+
+
 class Job:
     """Gom mọi tham số đã giải (auto -> giá trị thật) cho 1 lần chạy."""
 

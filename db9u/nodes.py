@@ -50,6 +50,11 @@ class DB9U_Upscale:
     FUNCTION = "run"
     CATEGORY = CATEGORY
 
+    @classmethod
+    def IS_CHANGED(cls, **kw):
+        # đổi sau mỗi lần bấm Reset preview -> ComfyUI chạy lại node (docs.comfy.org: IS_CHANGED)
+        return engine.RESET_TOKEN[0]
+
     def run(self, image, model, vae, positive, negative, target, denoise, cfg, preset, seed,
             upscale_model=None, control_net=None, qwen21_controlnet=None, control_image=None, settings=None):
         job = engine.Job(model, denoise, cfg, preset, seed, settings, qwen21_controlnet, control_net)
@@ -391,3 +396,20 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 for _k, (_c, _n) in GRADE_NODES.items():
     NODE_CLASS_MAPPINGS[_k] = _c
     NODE_DISPLAY_NAME_MAPPINGS[_k] = _n
+
+
+# ---------------------------------------------------------------- API nút "Reset preview" (web/js/db9u_tiles.js)
+try:
+    from aiohttp import web
+    from server import PromptServer
+
+    @PromptServer.instance.routes.post("/db9u/reset_preview")
+    async def _db9u_reset_preview(request):
+        try:
+            n = engine.reset_preview_cache()
+            print(f"[DB9U] Reset preview: đã xoá {n} bộ cache trong output/db9u_cache")
+            return web.json_response({"ok": True, "removed": n, "token": engine.RESET_TOKEN[0]})
+        except Exception as e:
+            return web.json_response({"ok": False, "error": str(e)}, status=500)
+except Exception:  # chạy ngoài ComfyUI (test)
+    pass

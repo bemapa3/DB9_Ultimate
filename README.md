@@ -1,4 +1,4 @@
-# DB9_Ultimate — v0.12.0
+# DB9_Ultimate — v0.12.5
 
 Bộ node ComfyUI upscale theo ô 6K–11K cho mọi checkpoint (FLUX.2 Klein, Qwen-Image 2.1, model khác qua profile JSON).
 Gộp phần tốt nhất của `db9_flux_locked_upscale` và `DB9_UpscaleEnchanceIMAGE`.
@@ -64,6 +64,7 @@ Thông số gốc: supersample 2.0, color_lock 0.55, contrast_lock 0.2, sharpen 
 - `denoise_mode` = **true** (mặc định, v0.12.1): `denoise` = đúng mức nhiễu bắt đầu (0.5 → 50% nhiễu). Kiểu `scheduler` cũ của Comfy với flux2 cắt đuôi lịch → denoise 0.5 thực tế nhiễu ~0.86 (gần vẽ lại hết → méo). Log in `denoise thật: nhiễu bắt đầu X`. Test thật (Klein, ref strip): **0.40–0.50 enhance sạch** (0.45 mặc định, ΔE ~2), 0.55+ bắt đầu vẽ lại chất liệu (mây thành lưới). ref tile = chỉ upscale (ΔE ~0.7). Mặc định sharpen 0.15, ss_source lanczos. Cuối lượt log `mức enhance: ΔE trung bình` tự gợi ý tăng/hạ.
 - `flow_guard` (px, mặc định 4): flow chỉ kéo chỗ AI trôi nhẹ (≤ guard) về đúng hình gốc; chỗ AI lệch > 2×guard (vẽ lại khác hẳn) giữ nguyên nét AI thay vì kéo giãn → hết méo kiểu "ảnh bị bóp". 0 = kéo hết như cũ. Log `căn flow p95 … / % ảnh lệch`.
 - **Preview** (v0.12.3, như DB9U Upscale): bật `preview_tile`, `preview_tiles` trống → bảng ô → bấm `🔲 Chọn ô trên bảng` trên node Forge, gõ `0.4,0.45,0.5` → bảng so denoise + log `mức enhance` từng mức. Tắt preview chạy full dùng lại ô ở denoise chính.
+- **🗑 Reset preview & chạy lại** (v0.12.5, trên Forge / Upscale / Advanced Settings): preview lỗi hoặc sợ lẫn ô cũ → bấm, xác nhận → xoá hết `output/db9u_cache` và chạy lại từ đầu. Không bấm khi đang chạy.
 
 Muốn màu bám gốc hơn: `chroma_lock` 0.5–1. Muốn viền kiến trúc thẳng tuyệt đối: `edge_guard` 0.5. Nhanh hơn: `ss_source` = lanczos hoặc supersample 1.5.
 

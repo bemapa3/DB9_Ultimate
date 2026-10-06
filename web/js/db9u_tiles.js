@@ -19,6 +19,30 @@ function outNodes(node) {
 function settingsOf(up) { const n = inNode(up, "settings"); return n?.type === "DB9U_Settings" ? n : null; }
 function upscaleOf(st) { return outNodes(st).find((n) => n.type === "DB9U_Upscale") || null; }
 
+// v0.12.5: nút "🗑 Reset preview & chạy lại" — xoá output/db9u_cache (ô preview + ô resume), xoá bảng ô đang nhớ,
+// server tăng token IS_CHANGED -> Run chạy lại node thật, không dùng kết quả/ô cũ.
+async function resetPreview(node) {
+  if (!confirm("Xoá TOÀN BỘ preview + ô đã lưu (output/db9u_cache) rồi chạy lại?\n" +
+               "• Đừng bấm khi workflow đang chạy.\n• Ô resume của ảnh khác (nếu có) cũng bị xoá.")) return;
+  try {
+    const res = await api.fetchApi("/db9u/reset_preview", { method: "POST" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(j.error || res.statusText || "server lỗi");
+    for (const n of [node, upscaleOf(node)]) {
+      if (!n) continue;
+      n.db9uBoard = null;
+      n.imgs = null;
+      n.setDirtyCanvas?.(true, true);
+    }
+    LAST = null;
+    console.log(`[DB9U] Reset preview: xoá ${j.removed} bộ cache -> chạy lại`);
+    app.queuePrompt(0, 1);
+  } catch (e) {
+    alert("Reset preview lỗi: " + e.message + "\n(Đã khởi động lại ComfyUI sau khi cập nhật DB9_Ultimate chưa?)");
+  }
+}
+const addReset = (node) => node.addWidget("button", "🗑 Reset preview & chạy lại", null, () => resetPreview(node));
+
 function parseSpec(spec, n) {
   const out = new Set();
   for (const m of String(spec || "").toLowerCase().matchAll(/o?\s*(\d+)(?:\s*-\s*o?\s*(\d+))?/g)) {
@@ -115,6 +139,7 @@ app.registerExtension({
       nodeType.prototype.onNodeCreated = function () {
         const r = onCreated?.apply(this, arguments);
         this.addWidget("button", "🔲 Chọn ô trên bảng", null, () => openPicker(this.db9uBoard || LAST, settingsOf(this)));
+        addReset(this);
         return r;
       };
       const onExecuted = nodeType.prototype.onExecuted;
@@ -128,6 +153,7 @@ app.registerExtension({
       nodeType.prototype.onNodeCreated = function () {
         const r = onCreated?.apply(this, arguments);
         this.addWidget("button", "🔲 Chọn ô trên bảng", null, () => openPicker(this.db9uBoard, this));
+        addReset(this);
         return r;
       };
       const onExecuted = nodeType.prototype.onExecuted;
@@ -141,6 +167,7 @@ app.registerExtension({
       nodeType.prototype.onNodeCreated = function () {
         const r = onCreated?.apply(this, arguments);
         this.addWidget("button", "🔲 Chọn ô trên bảng", null, () => openPicker(upscaleOf(this)?.db9uBoard || LAST, this));
+        addReset(this);
         // v0.11.1: chọn ô preview bằng menu -> tự bật preview_tile; preview_tiles chỉ là ô đã bấm trên bảng
         const pick = W(this, "preview_pick"), pt = W(this, "preview_tile");
         if (pick) {

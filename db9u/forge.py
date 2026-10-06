@@ -686,6 +686,11 @@ class DB9U_Forge:
     FUNCTION = "run"
     CATEGORY = "DB9 Ultimate"
 
+    @classmethod
+    def IS_CHANGED(cls, **kw):
+        # đổi sau mỗi lần bấm Reset preview -> ComfyUI chạy lại node
+        return engine.RESET_TOKEN[0]
+
     def run(self, image, model, vae, positive, negative, upscale_model=None, **p):
         target = p.pop("target")
         fg = Forge(model, vae, positive, negative, p)

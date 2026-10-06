@@ -5,6 +5,38 @@ Cách đọc log: `mức enhance: ΔE trung bình` — <1.5 = chỉ upscale · 1
 
 ---
 
+## 0. Hai bộ chốt — DB9U Forge, FLUX.2 Klein 9B (v0.12.5)
+
+Chỉ khác nhau ở **2 ô: `reference_mode` và `denoise`**. Còn lại giống nhau.
+
+| Thông số | 🅤 UPSCALE (bám gốc, chỉ phóng to) | 🅔 ENHANCE (AI vẽ thêm lá/vải/cây) |
+|---|---|---|
+| `reference_mode` | **tile** | **strip** |
+| `denoise` | **0.55** (0.55–0.75 đều như nhau) | **0.55** |
+| `denoise_mode` | true | true |
+| `supersample` | 2.0 | 2.0 |
+| `steps` / `cfg` / `sampler` / `scheduler` | 0 / 0 / auto / auto | 0 / 0 / auto / auto |
+| `color_lock` / `contrast_lock` | 0.55 / 0.20 | 0.55 / 0.20 |
+| `sharpen` | 0.15 | 0.15 |
+| `global_color` | 0.50 | 0.50 |
+| `ss_source` / `downscale` | lanczos / bicubic_sharp | lanczos / bicubic_sharp |
+| `chroma_lock` | 0 | 0 (lá đổi màu → 0.4) |
+| `edge_guard` | 0.5 | 0.5 |
+| `flow_align` / `flow_guard` | bật / 4 | bật / 4 |
+| `upscale_model` | 4x-UltraSharp | 4x-UltraSharp |
+| **Kết quả thật** | ΔE ~0.74, gần như chép lại nền, sạch ✅ | ΔE TB 2.98, chủ duyệt "khá ok" ✅ |
+| Thời gian (RTX 5070 Ti, 6K) | chậm hơn strip ~40% (1 ô/lượt) | ~11 phút / 60 ô |
+
+**Khi nào dùng:**
+- 🅤 UPSCALE: ảnh đã duyệt với khách, chỉ cần to ra, không được đổi chi tiết.
+- 🅔 ENHANCE: ảnh render thiếu chi tiết lá, cỏ, vải, đá — cho AI vẽ thêm.
+
+**Chỉnh nhanh ENHANCE:** trời/mây ra lưới → `denoise` 0.50 · lá hồng/cành tím → `chroma_lock` 0.4 · muốn chi tiết hơn nữa → `sharpen` 0.25 + `contrast_lock` 0.10 ⚠️.
+
+**Preview lỗi / lẫn ô cũ:** bấm **🗑 Reset preview & chạy lại** trên node (xoá `output/db9u_cache`, chạy lại từ đầu).
+
+---
+
 ## 1. Muốn AI vẽ thêm chi tiết lá, vải, cây cối
 
 ### A. Dùng DB9U Forge (đang là bộ chính)
@@ -28,6 +60,8 @@ Forge dùng **1 mức denoise cho cả ảnh** (không chia vùng) → tăng chi
 2. `preview_denoise` = `0.45,0.5,0.55` → so bảng + đọc ΔE từng mức.
 3. Chọn mức lá đẹp mà trời/tường chưa lưới. Nếu lá đổi màu → `chroma_lock` 0.4.
 4. Tắt preview, chạy full (dùng lại ô đã preview).
+
+**Số liệu thật (img_00027, RTX 5070 Ti, preview 9 ô, denoise 0.55):** ΔE TB 2.98 (so 1.88 ở 0.45), ô O26–O28 3.2–4.9, ô O32/O58 1.5–1.6, trôi ≈ 0 px, 9 ô 1.7 phút. Mắt: ✅ chủ duyệt "khá ok" → chốt thành bộ 🅔 ENHANCE (mục 0).
 
 ### B. Dùng DB9U Upscale (có denoise theo vùng — hợp hơn khi ảnh nhiều cây + nhiều trời)
 Node này tự nhận vùng lá/texture và cho denoise cao hơn ở đó, trời gần như giữ nguyên.
@@ -84,7 +118,7 @@ Klein distilled chạy cfg 1 theo profile → chỉ positive có tác dụng, kh
 
 | Mục đích | denoise | sharpen | chroma_lock | edge_guard | Ghi chú |
 |---|---|---|---|---|---|
-| Chỉ phóng to, bám gốc | 0.30 hoặc ref `tile` | 0.10 | 0.5 | 0.5 | ΔE < 1.5 |
+| Chỉ phóng to, bám gốc ✅ (🅤) | 0.55 + ref `tile` | 0.15 | 0 | 0.5 | ΔE ~0.74 |
 | Enhance sạch (mặc định) ✅ | 0.45 | 0.15 | 0 | 0.5 | ΔE ~1.9, 60 ô 11.2 phút ở 6K |
-| Đẩy chi tiết lá/vải ⚠️ | 0.50–0.55 | 0.25 | 0.4 | 0.5 | contrast_lock 0.10, flow_guard 3 |
+| Đẩy chi tiết lá/vải ✅ (🅔) | 0.55 (ref strip) | 0.15 | 0 | 0.5 | ΔE 2.98, chủ duyệt |
 | Vẽ lại mạnh (concept) ⚠️ | 0.60+ | 0.15 | 0.5 | 0.5 | Trời/mây dễ lưới, dễ méo |

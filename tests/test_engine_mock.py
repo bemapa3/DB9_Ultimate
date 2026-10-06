@@ -426,6 +426,24 @@ def test_reuse_preview_in_full_run():
     print("OK reuse preview")
 
 
+def test_reset_preview():
+    import os
+    base = dict(engine.DEFAULTS, max_tile=512, tile_retries=0)
+    run(settings=dict(base, preview_tile=True, preview_tiles="O1,O3"), target="x2", preset="fast")
+    root = engine.cache_root()
+    assert os.path.isdir(root) and os.listdir(root), "preview phải để lại cache"
+    t0 = nodes.DB9U_Upscale.IS_CHANGED(denoise=0.4)
+    from db9u import forge
+    assert forge.DB9U_Forge.IS_CHANGED() == t0
+    n = engine.reset_preview_cache()
+    assert n >= 1 and not os.path.exists(root), n
+    assert nodes.DB9U_Upscale.IS_CHANGED(denoise=0.4) != t0 and forge.DB9U_Forge.IS_CHANGED() != t0
+    _, _, log, _ = run(settings=base, target="x2", preset="fast")
+    assert "dùng lại" not in log, log[:800]
+    assert engine.reset_preview_cache() >= 0  # gọi khi chưa có thư mục không lỗi
+    print("OK reset preview", n)
+
+
 def test_despeckle():
     from db9u import core
     x = torch.full((1, 256, 256, 3), 0.6)

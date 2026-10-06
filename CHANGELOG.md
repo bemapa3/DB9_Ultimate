@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.5 — 2026-10-06
+### ✅ Đã làm
+- Nút **🗑 Reset preview & chạy lại** trên DB9U Forge / DB9U Upscale / Advanced Settings: hỏi xác nhận → xoá toàn bộ `output/db9u_cache` (ô preview + ô resume) → xoá bảng ô đang nhớ → Run lại. Route `POST /db9u/reset_preview`; `IS_CHANGED` theo token reset để ComfyUI chạy lại node thật (không lấy kết quả cũ).
+- `docs/THONG_SO.md`: sổ tay thông số + **2 bộ chốt Forge Klein 9B**: 🅤 UPSCALE (ref tile, denoise 0.55, ΔE ~0.74) và 🅔 ENHANCE (ref strip, denoise 0.55, ΔE 2.98 — chủ duyệt preview img_00027).
+- Test: `test_reset_preview` (engine mock ALL PASS).
+### ⏳ Chưa làm
+- Nút reset chưa bấm thử trên ComfyUI thật.
+- Forge chưa có denoise theo vùng (sàn gỗ/vùng phẳng ít enhance).
+
 ## v0.12.4 — 2026-10-06
 ### ✅ Đã làm
 - Chốt mặc định Forge theo test thật (Klein 9B distilled, preview 6 ô đá/mây/gỗ, 4000x2250 -> 6K):
